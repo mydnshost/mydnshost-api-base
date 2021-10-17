@@ -13,6 +13,7 @@ class APIKey extends DBObject {
 	                             'recordregex' => NULL,
 	                             'user_read' => false,
 	                             'user_write' => false,
+	                             'admin_features' => false,
 	                             'created' => 0,
 	                             'lastused' => 0,
 	                            ];
@@ -56,6 +57,10 @@ class APIKey extends DBObject {
 
 	public function setUserWrite($value) {
 		return $this->setData('user_write', parseBool($value) ? 'true' : 'false');
+	}
+
+	public function setAdminFeatures($value) {
+		return $this->setData('admin_features', parseBool($value) ? 'true' : 'false');
 	}
 
 	public function setLastUsed($value) {
@@ -118,6 +123,10 @@ class APIKey extends DBObject {
 
 	public function getUserWrite() {
 		return parseBool($this->getData('user_write'));
+	}
+
+	public function getAdminFeatures() {
+		return parseBool($this->getData('admin_features'));
 	}
 
 	public function getLastUsed() {

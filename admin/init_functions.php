@@ -603,6 +603,15 @@ ALTER TABLE `domainkeys` ADD COLUMN `recordregex` TEXT AFTER `domains_write`;
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// API-KEYs with admin feature access
+			// ------------------------------------------------------------------------
+			$dataChanges[42] = new DBChange(<<<MYSQLQUERY
+ALTER TABLE `apikeys` ADD COLUMN `admin_features` ENUM('false', 'true') NOT NULL DEFAULT 'false' AFTER `user_write`;
+MYSQLQUERY
+);
+
+
 			return $dataChanges;
 		}
 	}
