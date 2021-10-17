@@ -1,4 +1,4 @@
-FROM registry.shanemcc.net/mydnshost-public/mydnshost-api-docker-base:latest
+FROM registry.shanemcc.net/mydnshost-public/api-docker-base:latest
 MAINTAINER Shane Mc Cormack <dataforce@dataforce.org.uk>
 
 COPY . /dnsapi
