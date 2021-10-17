@@ -3,11 +3,11 @@
 This repo holds the shared-code for some of the api backends for mydnshost.
 
 This is used as a base for:
-https://github.com/mydnshost/mydnshost-api
-https://github.com/mydnshost/mydnshost-containerlogger
-https://github.com/mydnshost/mydnshost-dispatcher
-https://github.com/mydnshost/mydnshost-joblogger
-https://github.com/mydnshost/mydnshost-workers
+ - https://github.com/mydnshost/mydnshost-api
+ - https://github.com/mydnshost/mydnshost-containerlogger
+ - https://github.com/mydnshost/mydnshost-dispatcher
+ - https://github.com/mydnshost/mydnshost-joblogger
+ - https://github.com/mydnshost/mydnshost-workers
 
 ## Running
 
