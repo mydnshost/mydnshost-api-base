@@ -235,6 +235,8 @@
 							break;
 						case 'MX':
 						case 'SRV':
+						case 'HTTPS':
+						case 'SVCB':
 							$info['Priority'] = $bits[$pos++];
 							// Fall through
 						default:
@@ -409,7 +411,7 @@
 
 			$info['Address'] = $data;
 			$info['TTL'] = $ttl;
-			if ($type == 'MX' || $type == 'SRV') {
+			if ($type == 'MX' || $type == 'SRV' || $type == 'SVCB' || $type == 'HTTPS') {
 				$info['Priority'] = $priority;
 			}
 
@@ -531,7 +533,7 @@
 				foreach ($bits as $bit => $names) {
 					foreach ($names as $name) {
 						if (isset($domainInfo[' META ']['TTL']) != $name['TTL']) { $ttl = $name['TTL']; } else { $ttl = ''; }
-						if ($type == 'MX' || $type == 'SRV') { $priority = $name['Priority']; } else { $priority = ''; }
+						if ($type == 'MX' || $type == 'SRV' || $type == 'SVCB' || $type == 'HTTPS') { $priority = $name['Priority']; } else { $priority = ''; }
 						$address = $name['Address'];
 
 						if ($bit !== 0 && empty($bit)) { $bit = $this->domain.'.'; }
