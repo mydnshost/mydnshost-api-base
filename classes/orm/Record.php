@@ -20,7 +20,7 @@ class Record extends DBObject {
 	protected static $_key = 'id';
 	protected static $_table = 'records';
 
-	protected static $VALID_RRs = ['A', 'AAAA', 'TXT', 'SRV', 'SOA', 'MX', 'TXT', 'PTR', 'CNAME', 'NS', 'CAA', 'DS', 'SSHFP', 'TLSA', 'RRCLONE', /* 'SVCB', 'HTTPS' */];
+	protected static $VALID_RRs = ['A', 'AAAA', 'TXT', 'SRV', 'SOA', 'MX', 'TXT', 'PTR', 'CNAME', 'NS', 'CAA', 'DS', 'SSHFP', 'TLSA', 'RRCLONE', 'SVCB', 'HTTPS'];
 
 	public static function getValidRecordTypes() {
 		return Record::$VALID_RRs;
