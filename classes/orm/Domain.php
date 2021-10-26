@@ -447,6 +447,15 @@ class Domain extends DBObject {
 					}
 				}
 			}
+		} else if ($record->getType() == 'SVCB' || $record->getType() == 'HTTPS') {
+			$content = explode(' ', $content, 2);
+			if ($content[0] != ".") {
+				$content[0] = $content[0] . '.';
+			}
+			$content = implode(' ', $content);
+			if ($recordDomain instanceof Domain && $recordDomain != $this) {
+				$content = preg_replace('#' . preg_quote($recordDomain->getDomainRaw()) . '.$#', $this->getDomainRaw() . '.', $content);
+			}
 		}
 
 		return $content;
