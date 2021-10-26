@@ -20,7 +20,7 @@ class Record extends DBObject {
 	protected static $_key = 'id';
 	protected static $_table = 'records';
 
-	protected static $VALID_RRs = ['A', 'AAAA', 'TXT', 'SRV', 'SOA', 'MX', 'TXT', 'PTR', 'CNAME', 'NS', 'CAA', 'DS', 'SSHFP', 'TLSA', 'RRCLONE'];
+	protected static $VALID_RRs = ['A', 'AAAA', 'TXT', 'SRV', 'SOA', 'MX', 'TXT', 'PTR', 'CNAME', 'NS', 'CAA', 'DS', 'SSHFP', 'TLSA', 'RRCLONE', /* 'SVCB', 'HTTPS' */];
 
 	public static function getValidRecordTypes() {
 		return Record::$VALID_RRs;
@@ -191,9 +191,15 @@ class Record extends DBObject {
 		$content = $this->getContent();
 		if ($type == 'MX' || $type == 'CNAME' || $type == 'PTR' || $type == 'NS') {
 			$this->setContent(do_idn_to_utf8($content));
-		} else if ($type == 'SRV' || $type == 'RRCLONE') {
+		} else if ($type == 'SRV' || $type == 'RRCLONE' || $type == 'SVCB' || $type == 'HTTPS') {
+			if ($type == 'SRV' || $type == 'RRCLONE') {
+				$targetPos = count($content) - 1;
+			} else if ($type == 'SVCB' || $type == 'HTTPS') {
+				$targetPos = 0;
+			}
+
 			$content = explode(' ', $content);
-			$content[count($content) - 1] = do_idn_to_utf8($content[count($content) - 1]);
+			$content[$targetPos] = do_idn_to_utf8($content[$targetPos]);
 			$this->setContent(implode(' ', $content));
 		}
 	}
@@ -210,9 +216,15 @@ class Record extends DBObject {
 		$content = $this->getContent();
 		if ($type == 'MX' || $type == 'CNAME' || $type == 'PTR' || $type == 'NS') {
 			$this->setContent(do_idn_to_ascii($content));
-		} else if ($type == 'SRV' || $type == 'RRCLONE') {
+		} else if ($type == 'SRV' || $type == 'RRCLONE' || $type == 'SVCB' || $type == 'HTTPS') {
+			if ($type == 'SRV' || $type == 'RRCLONE') {
+				$targetPos = count($content) - 1;
+			} else if ($type == 'SVCB' || $type == 'HTTPS') {
+				$targetPos = 0;
+			}
+
 			$content = explode(' ', $content);
-			$content[count($content) - 1] = do_idn_to_ascii($content[count($content) - 1]);
+			$content[$targetPos] = do_idn_to_ascii($content[$targetPos]);
 			$this->setContent(implode(' ', $content));
 		}
 	}
@@ -263,7 +275,7 @@ class Record extends DBObject {
 			}
 		}
 
-		if ($type == 'MX' || $type == 'SRV') {
+		if ($type == 'MX' || $type == 'SRV' || $type == 'SVCB' || $type == 'HTTPS') {
 			if ($this->getPriority() === NULL || $this->getPriority() === '') {
 				throw new ValidationFailed('Records of '. $type . ' require a priority.');
 			} else if (!preg_match('#^[0-9]+$#', $this->getPriority())) {
@@ -369,6 +381,40 @@ class Record extends DBObject {
 			} else {
 				throw new ValidationFailed('SRV Record content should have the format: <weight> <port> <target>');
 			}
+		}
+
+		if ($type == 'SVCB' || $type == 'HTTPS') {
+			$priority = $this->getPriority();
+			$target = '.';
+			$bits = explode(' ', $content, 2);
+			$target = $bits[0];
+
+			if ($priority == 0) {
+				// ALIAS Mode (2.4.2)
+				if (isset($bits[1]) && !empty($bits[1])) {
+					throw new ValidationFailed($type . ' does not accept SvcParams in alias mode (Priority == 0)');
+				}
+			}
+
+			if (filter_var($target, FILTER_VALIDATE_IP) !== FALSE) {
+				throw new ValidationFailed('Target must be a name not an IP.');
+			}
+
+			if ($target != ".") {
+				$testName = $target;
+				if (substr($testName, -1) == '.') {
+					$testName = substr($testName, 0, -1);
+				}
+
+				if (!Domain::validDomainName($testName)) {
+					throw new ValidationFailed('Target must be a valid FQDN.');
+				} else {
+					$bits[0] = $testName;
+					$this->setContent(implode(' ', $bits));
+				}
+			}
+
+			// TODO: Validate Params?
 		}
 
 		if ($type == 'CAA') {
@@ -480,6 +526,12 @@ class Record extends DBObject {
 					$content = $this->getContent() . '.';
 				}
 			}
+		} else if ($this->getType() == 'SVCB' || $this->getType() == 'HTTPS') {
+			$content = explode(' ', $content, 2);
+			if ($content[0] != ".") {
+				$content[0] = $content[0] . '.';
+			}
+			$content = implode(' ', $content);
 		}
 
 		return sprintf('%-30s %7s    IN %7s   %-6s %s', $this->getNameRaw() . '.', $this->getTTL(), $this->getType(), $this->getPriority(), $content);
