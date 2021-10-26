@@ -660,9 +660,10 @@ class Domain extends DBObject {
 		}
 		foreach ($output as $line) {
 			if (preg_match('#loaded serial [0-9]+#', $line)) { continue; } // Don't care for this line.
-			$finalOutput[] = str_replace($tempFile, '<FILE>', $line);
+			$line = str_replace($tempFile, '<FILE>', $line);
+			$finalOutput[] = $line;
 			if (preg_match('# <FILE>:([0-9]+): #', $line, $m)) {
-				$finalOutput[] = '> Line ' . $m[1] . ' is: ' . $zoneLines[$m[1]];
+				$finalOutput[] = '> Line ' . $m[1] . ' is: ' . $zoneLines[$m[1] - 1];
 			}
 		}
 
