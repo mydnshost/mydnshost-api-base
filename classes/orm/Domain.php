@@ -627,12 +627,13 @@ class Domain extends DBObject {
 	public function checkZoneValidity() {
 		$zfh = ZoneFileHandler::get('bind');
 		$ri = $this->getRecordsInfo(true, false);
-		$output = $zfh->generateZoneFile($this->getDomain(), $ri);
+		$zoneOutput = $zfh->generateZoneFile($this->getDomain(), $ri);
+		$zoneLines = explode("\n", $zoneOutput);
 
 		$tempFile = tempnam("/tmp", "chk-" . $this->getDomainRaw() . '-');
 		if ($tempFile === FALSE) { return [FALSE, ['Unable to check zone.']]; }
 
-		file_put_contents($tempFile, $output);
+		file_put_contents($tempFile, $zoneOutput);
 
 		$cmd = '/usr/sbin/named-checkzone';
 		$cmd .= ' -f text'; // Input format
@@ -660,6 +661,9 @@ class Domain extends DBObject {
 		foreach ($output as $line) {
 			if (preg_match('#loaded serial [0-9]+#', $line)) { continue; } // Don't care for this line.
 			$finalOutput[] = str_replace($tempFile, '<FILE>', $line);
+			if (preg_match('# <FILE>:([0-9]+): #', $line, $m)) {
+				$finalOutput[] = '> Line ' . $m[1] . ' is: ' . $zoneLines[$m[1]];
+			}
 		}
 
 		return [$result === 'OK', $finalOutput];
