@@ -192,13 +192,14 @@ class Record extends DBObject {
 		if ($type == 'MX' || $type == 'CNAME' || $type == 'PTR' || $type == 'NS') {
 			$this->setContent(do_idn_to_utf8($content));
 		} else if ($type == 'SRV' || $type == 'RRCLONE' || $type == 'SVCB' || $type == 'HTTPS') {
+			$content = explode(' ', $content);
+
 			if ($type == 'SRV' || $type == 'RRCLONE') {
 				$targetPos = count($content) - 1;
 			} else if ($type == 'SVCB' || $type == 'HTTPS') {
 				$targetPos = 0;
 			}
 
-			$content = explode(' ', $content);
 			$content[$targetPos] = do_idn_to_utf8($content[$targetPos]);
 			$this->setContent(implode(' ', $content));
 		}
@@ -217,13 +218,14 @@ class Record extends DBObject {
 		if ($type == 'MX' || $type == 'CNAME' || $type == 'PTR' || $type == 'NS') {
 			$this->setContent(do_idn_to_ascii($content));
 		} else if ($type == 'SRV' || $type == 'RRCLONE' || $type == 'SVCB' || $type == 'HTTPS') {
+			$content = explode(' ', $content);
+
 			if ($type == 'SRV' || $type == 'RRCLONE') {
 				$targetPos = count($content) - 1;
 			} else if ($type == 'SVCB' || $type == 'HTTPS') {
 				$targetPos = 0;
 			}
 
-			$content = explode(' ', $content);
 			$content[$targetPos] = do_idn_to_ascii($content[$targetPos]);
 			$this->setContent(implode(' ', $content));
 		}
