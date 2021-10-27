@@ -10,12 +10,13 @@
 			unset($this->records[$rrtype][$rrname]);
 		}
 
-		public function addRecord($rrname, $rrtype, $content, $ttl, $priority = null) {
+		public function addRecord($rrname, $rrtype, $content, $ttl, $priority = null, $comment = null) {
 			if (!isset($this->records[$rrtype])) { $this->records[$rrtype] = []; }
 			if (!isset($this->records[$rrtype][$rrname])) { $this->records[$rrtype][$rrname] = []; }
 
 			$value = ['Address' => $content, 'TTL' => $ttl];
 			if ($priority !== null) { $value['Priority'] = $priority; }
+			if ($comment !== null) { $value['Comment'] = $comment; }
 
 			$this->records[$rrtype][$rrname][] = $value;
 		}
@@ -45,6 +46,7 @@
 						             'Address' => $record['Address'],
 						             'TTL' => $record['TTL'],
 						             'Priority' => isset($record['Priority']) ? $record['Priority'] : null,
+						             'Comment' => isset($record['Comment']) ? $record['Comment'] : null,
 						            ];
 					}
 				}

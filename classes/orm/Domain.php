@@ -503,7 +503,7 @@ class Domain extends DBObject {
 				continue;
 			}
 
-			$records->addRecord($name, $record->getType(), $content, $record->getTTL(), $record->getPriority());
+			$records->addRecord($name, $record->getType(), $content, $record->getTTL(), $record->getPriority(), $record->getComment());
 		}
 
 		if (!$raw) {
@@ -602,7 +602,9 @@ class Domain extends DBObject {
 						if ($sourceRecord['Type'] == 'RRCLONE') { continue; }
 
 						$ttl = $record->getTTL() >= 1 ? $record->getTTL() : $sourceRecord['TTL'];
-						$clonedRecordsInfo->addRecord($name, $sourceRecord['Type'], $sourceRecord['Address'], $ttl, $sourceRecord['Priority']);
+						$priority = isset($sourceRecord['Priority']) ? $sourceRecord['Priority'] : null;
+						$comment = isset($sourceRecord['Comment']) ? $sourceRecord['Comment'] : null;
+						$clonedRecordsInfo->addRecord($name, $sourceRecord['Type'], $sourceRecord['Address'], $ttl, $priority, $comment);
 						$hasNS = $hasNS || ($sourceRecord['Type'] == "NS" && $record->getName() == $recordDomain->getDomain());
 						$validRecordCount++;
 					}
@@ -666,7 +668,8 @@ class Domain extends DBObject {
 
 					$records->removeRecords($rrname, $rrtype);
 					foreach ($new as $r) {
-						$records->addRecord($rrname, $rrtype, $r['Address'], $r['TTL'], $r['Priority']);
+						$comment = isset($r['Comment']) ? $r['Comment'] : null;
+						$records->addRecord($rrname, $rrtype, $r['Address'], $r['TTL'], $r['Priority'], $comment);
 					}
 				}
 			}

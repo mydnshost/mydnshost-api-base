@@ -40,7 +40,12 @@
 			foreach ($data['records'] as $type => $entries) {
 				foreach ($entries as $rname => $records) {
 					foreach ($records as $record) {
-						$bind->setRecord($rname, $type, $record['Address'], $record['TTL'], isset($record['Priority']) ? $record['Priority'] : NULL);
+						$bind->setRecord($rname,
+							             $type,
+							             $record['Address'],
+							             $record['TTL'],
+							             isset($record['Priority']) ? $record['Priority'] : NULL,
+							             isset($record['Comment']) ? $record['Comment'] : NULL);
 					}
 				}
 			}

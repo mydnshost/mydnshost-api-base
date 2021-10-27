@@ -129,9 +129,14 @@
 			$startname = $origin;
 
 			$domainInfo = $this->domainInfo;
+			$lastComment = [];
 			for ($i = 0; $i < count($file); $i++) {
 				$testline = trim($file[$i]);
-				if (empty($testline) || $testline[0] == ';' || $testline == ')') { continue; }
+				if (empty($testline) || $testline == ')') { continue; }
+				if ($testline[0] == ';') {
+					$lastComment[] = ltrim($testline, '; ');
+					continue;
+				}
 				$line = rtrim($file[$i]);
 
 				$pos = 0;
@@ -141,10 +146,12 @@
 					$zonettl = $this->ttlToInt($bits[++$pos]);
 					$this->debug('parseZoneFile', 'TTL is now: '.$zonettl);
 					if (!isset($domainInfo[' META ']['TTL'])) { $domainInfo[' META ']['TTL'] = $zonettl; }
+					$lastComment = [];
 				} else if (strtolower($bits[0]) == '$origin') {
 					$origin = $bits[++$pos];
 					$this->debug('parseZoneFile', 'Origin is now: '.$origin);
 					if ($origin == '.') { $origin = ''; }
+					$lastComment = [];
 				} else {
 					// Zone stuff!
 					$pos = 0;
@@ -252,6 +259,9 @@
 
 					// If a TXT record is given, parse it to a single string rather than multiple.
 					if ($type == 'TXT') { $info['Address'] = Bind::parseTXTRecord($info['Address']); }
+
+					$info['Comment'] = $lastComment;
+					$lastComment = [];
 
 					// And finally actually add to the domainInfo array:
 					$domainInfo[$type][$name][] = $info;
@@ -403,8 +413,9 @@
 		 * @param $data The data for the record (ie 127.0.0.1)
 		 * @param $ttl (optional) TTL for the record.
 		 * @param $priority (optional) Priority of the record (for mx)
+		 * @param $comment (optional) Comment to put above this record
 		 */
-		function setRecord($name, $type, $data, $ttl = '', $priority = '') {
+		function setRecord($name, $type, $data, $ttl = '', $priority = '', $comment = '') {
 			$name = do_idn_to_ascii($name);
 			$domainInfo = $this->domainInfo;
 			if ($ttl == '') { $ttl = $domainInfo[' META ']['TTL']; }
@@ -419,6 +430,10 @@
 				$info['Address'] = do_idn_to_ascii($info['Address']);
 			} else if ($type == 'TXT') {
 				$info['Address'] = Bind::stringToTXTRecord($info['Address']);
+			}
+
+			if (!empty($comment)) {
+				$info['Comment'] = $comment;
 			}
 
 			if (!isset($domainInfo[$type][$name])) { $domainInfo[$type][$name] = array(); };
@@ -538,6 +553,12 @@
 
 						if ($bit !== 0 && empty($bit)) { $bit = $this->domain.'.'; }
 
+						if (isset($name['Comment']) && !empty($name['Comment'])) {
+							if (!is_array($name['Comment'])) { $name['Comment'] = explode("\n", $name['Comment']); }
+							foreach ($name['Comment'] as $comment) {
+								$lines[] = '; ' . str_replace("\r", '', str_replace("\n", '\n', $comment));
+							}
+						}
 						$lines[] = sprintf('%-30s %7s    IN %7s   %-6s %s', $bit, $ttl, $type, $priority, $address);
 					}
 				}
