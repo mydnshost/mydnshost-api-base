@@ -545,10 +545,12 @@ class Record extends DBObject {
 			$content = implode(' ', $content);
 		}
 
+		// TODO: This will lose comments.
 		return sprintf('%-30s %7s    IN %7s   %-6s %s', $this->getNameRaw() . '.', $this->getTTL(), $this->getType(), $this->getPriority(), $content);
 	}
 
 	public function parseString($str, $domain = '') {
+		// TODO: This can not handle comments.
 		$bits = preg_split('/\s+/', $str);
 
 		$name = array_shift($bits);
