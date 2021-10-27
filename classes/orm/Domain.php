@@ -626,6 +626,52 @@ class Domain extends DBObject {
 			$records->mergeFrom($clonedRecordsInfo);
 		}
 
+		// Add ipv4hint or ipv6hint to any HTTPS/SVCB records that are in this
+		// domain where the original doesn't have one.
+		foreach (['SVCB', 'HTTPS'] as $rrtype) {
+			if (isset($records->get()[$rrtype])) {
+				foreach ($records->get()[$rrtype] as $rrname => $rec) {
+					$new = [];
+					foreach ($rec as $r) {
+						if ($r['Priority'] > 0) {
+							$bits = explode(' ', $r['Address']);
+							$a = array_shift($bits);
+							if ($a == '.') { $a = $rrname; }
+							$hasHints = false;
+							foreach ($bits as $param) {
+								$pbits = explode('=', strtolower($param), 2);
+								if ($pbits[0] == 'ipv4hint' || $pbits[0] == 'ipv6hint') { $hasHints = true; break; }
+							}
+
+							if (!$hasHints) {
+								$aRecords = array_reduce($records->getByName($a, ['A']), function ($c, $i) {
+									if (!empty($c)) { $c .= ','; }
+									$c .= $i['Address'];
+									return $c;
+								}, '');
+
+								$aaaaRecords = array_reduce($records->getByName($a, ['AAAA']), function ($c, $i) {
+									if (!empty($c)) { $c .= ','; }
+									$c .= $i['Address'];
+									return $c;
+								}, '');
+
+								if (!empty($aRecords)) { $r['Address'] .= ' ipv4hint=' . $aRecords; }
+								if (!empty($aaaaRecords)) { $r['Address'] .= ' ipv6hint=' . $aaaaRecords; }
+							}
+						}
+
+						$new[] = $r;
+					}
+
+					$records->removeRecords($rrname, $rrtype);
+					foreach ($new as $r) {
+						$records->addRecord($rrname, $rrtype, $r['Address'], $r['TTL'], $r['Priority']);
+					}
+				}
+			}
+		}
+
 		if ($expandRecordsInfo) { $records = $records->get(); }
 
 		$res = ['soa' => $bindSOA, 'hasNS' => $hasNS, 'records' => $records];

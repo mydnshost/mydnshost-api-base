@@ -33,11 +33,12 @@
 			}
 		}
 
-		public function getByName($name) {
+		public function getByName($name, $types = []) {
 			$result = [];
 			foreach ($this->records as $type => $entries) {
 				foreach ($entries as $rname => $records) {
 					if ($rname != $name) { continue; }
+					if (!empty($types) && !in_array($type, $types)) { continue; }
 					foreach ($records as $record) {
 						$result[] = ['Name' => $rname,
 						             'Type' => $type,
