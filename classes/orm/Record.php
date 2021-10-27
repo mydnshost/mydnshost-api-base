@@ -15,6 +15,7 @@ class Record extends DBObject {
 	                             'priority' => NULL,
 	                             'changed_at' => 0,
 	                             'changed_by' => NULL,
+	                             'comment' => NULL,
 	                             'disabled' => false,
 	                            ];
 	protected static $_key = 'id';
@@ -117,6 +118,10 @@ class Record extends DBObject {
 		return $this->setData('changed_by', $value);
 	}
 
+	public function setComment($value) {
+		return $this->setData('comment', $value);
+	}
+
 	public function setDisabled($value) {
 		return $this->setData('disabled', parseBool($value) ? 'true' : 'false');
 	}
@@ -163,6 +168,10 @@ class Record extends DBObject {
 
 	public function getChangedBy() {
 		return intvalOrNull($this->getData('changed_by'));
+	}
+
+	public function getComment() {
+		return $this->getData('comment');
 	}
 
 	public function isDisabled() {

@@ -611,6 +611,14 @@ ALTER TABLE `apikeys` ADD COLUMN `admin_features` ENUM('false', 'true') NOT NULL
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// Record Comments
+			// ------------------------------------------------------------------------
+			$dataChanges[43] = new DBChange(<<<MYSQLQUERY
+ALTER TABLE `records` ADD COLUMN `comment` TEXT AFTER `changed_by`;
+MYSQLQUERY
+);
+
 
 			return $dataChanges;
 		}
