@@ -717,7 +717,7 @@ class Domain extends DBObject {
 			if (preg_match('#loaded serial [0-9]+#', $line)) { continue; } // Don't care for this line.
 			$line = str_replace($tempFile, '<FILE>', $line);
 			$finalOutput[] = $line;
-			if (preg_match('# <FILE>:([0-9]+): #', $line, $m)) {
+			if (preg_match('#<FILE>:([0-9]+):#', $line, $m)) {
 				$finalOutput[] = '> Line ' . $m[1] . ' is: ' . $zoneLines[$m[1] - 1];
 			}
 		}
