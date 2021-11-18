@@ -347,7 +347,7 @@ class ZoneKey extends DBObject {
 		$dir = tempdir(null, 'zonekeys');
 
 		// Build command to generate keys
-		$cmd = '/usr/sbin/dnssec-keygen -r /dev/urandom -K ' . escapeshellarg($dir);
+		$cmd = '/usr/sbin/dnssec-keygen -K ' . escapeshellarg($dir);
 		if ($algorithm != NULL) { $cmd .= ' -a ' . escapeshellarg($algorithm); }
 		if ($bits != NULL) { $cmd .= ' -b ' . escapeshellarg($bits); }
 
@@ -355,7 +355,7 @@ class ZoneKey extends DBObject {
 		else if ($flags != '256') { throw new Exception('Unknown flags: ' . $flags); }
 
 		$cmd .= ' ' . escapeshellarg($domain instanceof Domain ? $domain->getDomainRaw() : $domain);
-		$cmd .= ' >/dev/null 2>&1';
+		$cmd .= ' 2>&1';
 
 		// Try to generate keys
 		$return = 0;
@@ -368,7 +368,7 @@ class ZoneKey extends DBObject {
 		// Check that we actually succeeded or not
 		if ($return != 0 || empty($public) || empty($private)) {
 			deleteDir($dir);
-			throw new Exception('Error generating keys.');
+			throw new Exception('Error generating keys. (' . json_encode($output) . ')');
 		}
 
 		$public = file_get_contents($public[0]);
