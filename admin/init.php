@@ -23,7 +23,7 @@
 	}
 
 	// Check for users, if there isn't one - add a default admin user.
-	if (getUserCount() == 0) {
+	/* if (getUserCount() == 0) {
 		echo 'Inserting default admin user.', "\n";
 
 		$password = getEnvOrDefault('ADMIN_PASS', 'password');
@@ -44,6 +44,6 @@
 		}
 	} else {
 		echo 'Found users, not adding anything.', "\n";
-	}
+	} */
 
 	exit(0);
