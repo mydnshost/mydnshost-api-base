@@ -619,6 +619,17 @@ ALTER TABLE `records` ADD COLUMN `comment` TEXT AFTER `changed_by`;
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// Domain State Verification
+			// ------------------------------------------------------------------------
+			$dataChanges[44] = new DBChange(<<<MYSQLQUERY
+ALTER TABLE `domains` ADD COLUMN `verificationstate` varchar(255) NOT NULL DEFAULT 'unknown' AFTER `nsec3params`;
+ALTER TABLE `domains` ADD COLUMN `verificationstatetime` int(11) NOT NULL DEFAULT '0' AFTER `verificationstate`;
+ALTER TABLE `domains` ADD INDEX `domainverificationstate` (`verificationstate` ASC);
+ALTER TABLE `domains` ADD INDEX `domainverificationtime` (`verificationstatetime` ASC);
+ALTER TABLE `domains` ADD INDEX `domainverificationstatetime` (`verificationstate` ASC, `verificationstatetime` ASC);
+MYSQLQUERY
+);
 
 			return $dataChanges;
 		}

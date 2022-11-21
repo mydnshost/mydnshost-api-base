@@ -13,6 +13,8 @@ class Domain extends DBObject {
 	                             'defaultttl' => 86400,
 	                             'nsec3params' => NULL,
 	                             'aliasof' => NULL,
+	                             'verificationstate' => 'unknown',
+	                             'verificationstatetime' => 0,
 	                            ];
 	protected static $_key = 'id';
 	protected static $_table = 'domains';
@@ -44,6 +46,14 @@ class Domain extends DBObject {
 
 	public function setAliasOf($value) {
 		return $this->setData('aliasof', $value);
+	}
+
+	public function setVerificationState($value) {
+		return $this->setData('verificationstate', $value);
+	}
+
+	public function setVerificationStateTime($value) {
+		return $this->setData('verificationstatetime', $value);
 	}
 
 	/**
@@ -172,6 +182,14 @@ class Domain extends DBObject {
 
 	public function getAliasOf() {
 		return intvalOrNull($this->getData('aliasof'));
+	}
+
+	public function getVerificationState() {
+		return $this->getData('verificationstate');
+	}
+
+	public function getVerificationStateTime() {
+		return intval($this->getData('verificationstatetime'));
 	}
 
 	/**
