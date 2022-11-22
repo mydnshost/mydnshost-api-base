@@ -21,6 +21,7 @@ class User extends DBObject {
 	protected static $VALID_PERMISSIONS = ['system_stats',
 	                                       'domains_logs',
 	                                       'domains_stats',
+	                                       'domains_verify',
 	                                       'manage_domains',
 	                                       'domains_create',
 	                                       'manage_users',
