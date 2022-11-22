@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f7ae36699a4117c059a57178bade9737",
+    "content-hash": "19860d6ba82edf94c4871719a5490ea2",
     "packages": [
         {
             "name": "authy/php",
@@ -1694,16 +1694,16 @@
         },
         {
             "name": "shanemcc/php-db",
-            "version": "0.5",
+            "version": "0.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ShaneMcC/php-db.git",
-                "reference": "c0b10cbd9d7bd9c53e124026f75bd2eb7e327469"
+                "reference": "29caf7a1ac9fa151c0736b5debedf95d9a1c1020"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ShaneMcC/php-db/zipball/c0b10cbd9d7bd9c53e124026f75bd2eb7e327469",
-                "reference": "c0b10cbd9d7bd9c53e124026f75bd2eb7e327469",
+                "url": "https://api.github.com/repos/ShaneMcC/php-db/zipball/29caf7a1ac9fa151c0736b5debedf95d9a1c1020",
+                "reference": "29caf7a1ac9fa151c0736b5debedf95d9a1c1020",
                 "shasum": ""
             },
             "require": {
@@ -1730,9 +1730,9 @@
             "homepage": "https://github.com/shanemcc/php-db",
             "support": {
                 "issues": "https://github.com/ShaneMcC/php-db/issues",
-                "source": "https://github.com/ShaneMcC/php-db/tree/0.5"
+                "source": "https://github.com/ShaneMcC/php-db/tree/0.5.1"
             },
-            "time": "2021-03-11T01:18:28+00:00"
+            "time": "2022-11-22T00:10:17+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -2324,5 +2324,5 @@
         "ext-redis": "^5.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
