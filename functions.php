@@ -316,7 +316,12 @@
 
 			$regex = '(\'| |\()' . preg_quote($domain->getDomain());
 
-			$search = ['docker.hostname' => $source[1], 'message' => ['$regex' => $regex]];
+			$search = ['docker.hostname' => $source[1],
+			           '$and' => [[
+			               '$text' => ['$search' => $domain->getDomain()],
+			               'message' => ['$regex' => $regex],
+			            ]],
+			          ];
 			$options = ['projection' => ['_id' => 0], 'sort' => ['timestamp' => -1], 'limit' => 100];
 
 			Mongo::get()->connect();
