@@ -700,6 +700,16 @@ class Domain extends DBObject {
 		return $res;
 	}
 
+	private function commandPath($command) {
+		if (file_exists('/usr/bin/' . $command)) {
+			return '/usr/bin/' . $command;
+		} else if (file_exists('/usr/sbin/' . $command)) {
+			return '/usr/sbin/' . $command;
+		} else {
+			return '/usr/bin/env ' . $command;
+		}
+	}
+
 	public function checkZoneValidity() {
 		$zfh = ZoneFileHandler::get('bind');
 		$ri = $this->getRecordsInfo(true, false);
@@ -711,7 +721,7 @@ class Domain extends DBObject {
 
 		file_put_contents($tempFile, $zoneOutput);
 
-		$cmd = '/usr/bin/named-checkzone';
+		$cmd = $this->commandPath('named-checkzone');
 		$cmd .= ' -f text'; // Input format
 		$cmd .= ' -i local'; // Zone-integrity checks - only check local records
 		$cmd .= ' -k warn'; // "check-names" checks
