@@ -711,7 +711,7 @@ class Domain extends DBObject {
 
 		file_put_contents($tempFile, $zoneOutput);
 
-		$cmd = '/usr/sbin/named-checkzone';
+		$cmd = '/usr/bin/named-checkzone';
 		$cmd .= ' -f text'; // Input format
 		$cmd .= ' -i local'; // Zone-integrity checks - only check local records
 		$cmd .= ' -k warn'; // "check-names" checks
