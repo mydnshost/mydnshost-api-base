@@ -323,7 +323,7 @@ class ZoneKey extends DBObject {
 		// Extract DS records from DNSKEY records and store public key data.
 		$tempdir = tempdir(sys_get_temp_dir(), 'zonekey');
 		file_put_contents($tempdir . '/zone.key', implode("\n", $public));
-		exec(self::commandPath('dsfromkey') . ' ' . escapeshellarg($tempdir . '/zone.key') . ' 2>/dev/null', $publicData);
+		exec(self::commandPath('dnssec-dsfromkey') . ' ' . escapeshellarg($tempdir . '/zone.key') . ' 2>/dev/null', $publicData);
 		deleteDir($tempdir);
 		$this->setKeyPublic(implode("\n", $publicData));
 
