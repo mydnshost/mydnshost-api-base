@@ -550,3 +550,22 @@
 	function do_idn_to_utf8($domain) {
 		return ($domain == '.') ? $domain : idn_to_utf8($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
 	}
+
+	function findCommandPath($commands = []) {
+		if (!is_array($commands)) { $commands = [$commands]; }
+
+		// Try and find each command, return the first one we find.
+		foreach ($commands as $command) {
+			if (file_exists('/usr/bin/' . $command)) {
+				return '/usr/bin/' . $command;
+			} else if (file_exists('/usr/sbin/' . $command)) {
+				return '/usr/sbin/' . $command;
+			} else {
+				$exists = exec('which ' . escapeshellarg($command));
+				if (!empty($exists)) { return $exists; }
+			}
+		}
+
+		// Failing that error.
+		throw new \Exception('Command not found: ' . implode(', ', $commands));
+	}

@@ -278,16 +278,6 @@ class ZoneKey extends DBObject {
 		return $result;
 	}
 
-	private static function commandPath($command) {
-		if (file_exists('/usr/bin/' . $command)) {
-			return '/usr/bin/' . $command;
-		} else if (file_exists('/usr/sbin/' . $command)) {
-			return '/usr/sbin/' . $command;
-		} else {
-			return '/usr/bin/env ' . $command;
-		}
-	}
-
 	/**
 	 * Import key data into this key.
 	 *
@@ -323,7 +313,7 @@ class ZoneKey extends DBObject {
 		// Extract DS records from DNSKEY records and store public key data.
 		$tempdir = tempdir(sys_get_temp_dir(), 'zonekey');
 		file_put_contents($tempdir . '/zone.key', implode("\n", $public));
-		exec(self::commandPath('dnssec-dsfromkey') . ' ' . escapeshellarg($tempdir . '/zone.key') . ' 2>/dev/null', $publicData);
+		exec(findCommandPath(['dsfromkey', 'dnssec-dsfromkey']) . ' ' . escapeshellarg($tempdir . '/zone.key') . ' 2>/dev/null', $publicData);
 		deleteDir($tempdir);
 		$this->setKeyPublic(implode("\n", $publicData));
 
@@ -357,7 +347,7 @@ class ZoneKey extends DBObject {
 		$dir = tempdir(null, 'zonekeys');
 
 		// Build command to generate keys
-		$cmd = self::commandPath('dnssec-keygen') . ' -K ' . escapeshellarg($dir);
+		$cmd = findCommandPath(['dnssec-keygen']) . ' -K ' . escapeshellarg($dir);
 		if ($algorithm != NULL) { $cmd .= ' -a ' . escapeshellarg($algorithm); }
 		if ($bits != NULL) { $cmd .= ' -b ' . escapeshellarg($bits); }
 
