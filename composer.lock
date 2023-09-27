@@ -101,20 +101,20 @@
         },
         {
             "name": "enygma/yubikey",
-            "version": "3.3",
+            "version": "3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/enygma/yubikey.git",
-                "reference": "2c2502dd85ed3d13c08fbb8a3eef516fdef58ec6"
+                "reference": "31802c4f5ef24df87c4710e5893bdf8ad73554be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/enygma/yubikey/zipball/2c2502dd85ed3d13c08fbb8a3eef516fdef58ec6",
-                "reference": "2c2502dd85ed3d13c08fbb8a3eef516fdef58ec6",
+                "url": "https://api.github.com/repos/enygma/yubikey/zipball/31802c4f5ef24df87c4710e5893bdf8ad73554be",
+                "reference": "31802c4f5ef24df87c4710e5893bdf8ad73554be",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.1"
+                "php": ">=7.4"
             },
             "require-dev": {
                 "codeclimate/php-test-reporter": "dev-master",
@@ -148,9 +148,9 @@
             ],
             "support": {
                 "issues": "https://github.com/enygma/yubikey/issues",
-                "source": "https://github.com/enygma/yubikey/tree/master"
+                "source": "https://github.com/enygma/yubikey/tree/3.4"
             },
-            "time": "2018-03-08T20:38:39+00:00"
+            "time": "2023-01-09T16:41:59+00:00"
         },
         {
             "name": "evenement/evenement",
