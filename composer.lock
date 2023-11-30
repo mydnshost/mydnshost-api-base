@@ -101,16 +101,16 @@
         },
         {
             "name": "enygma/yubikey",
-            "version": "3.4",
+            "version": "3.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/enygma/yubikey.git",
-                "reference": "31802c4f5ef24df87c4710e5893bdf8ad73554be"
+                "reference": "26c194dc1751d3978388e109030aa76afeade7aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/enygma/yubikey/zipball/31802c4f5ef24df87c4710e5893bdf8ad73554be",
-                "reference": "31802c4f5ef24df87c4710e5893bdf8ad73554be",
+                "url": "https://api.github.com/repos/enygma/yubikey/zipball/26c194dc1751d3978388e109030aa76afeade7aa",
+                "reference": "26c194dc1751d3978388e109030aa76afeade7aa",
                 "shasum": ""
             },
             "require": {
@@ -148,9 +148,9 @@
             ],
             "support": {
                 "issues": "https://github.com/enygma/yubikey/issues",
-                "source": "https://github.com/enygma/yubikey/tree/3.4"
+                "source": "https://github.com/enygma/yubikey/tree/3.5"
             },
-            "time": "2023-01-09T16:41:59+00:00"
+            "time": "2023-11-29T16:57:14+00:00"
         },
         {
             "name": "evenement/evenement",
