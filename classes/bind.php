@@ -415,7 +415,7 @@
 		 * @param $priority (optional) Priority of the record (for mx)
 		 * @param $comment (optional) Comment to put above this record
 		 */
-		function setRecord($name, $type, $data, $ttl = '', $priority = '', $comment = '') {
+		function setRecord($name, $type, $data, $ttl = '', $priority = '', $comment = []) {
 			$name = do_idn_to_ascii($name);
 			$domainInfo = $this->domainInfo;
 			if ($ttl == '') { $ttl = $domainInfo[' META ']['TTL']; }
@@ -432,9 +432,8 @@
 				$info['Address'] = Bind::stringToTXTRecord($info['Address']);
 			}
 
-			if (!empty($comment)) {
-				$info['Comment'] = $comment;
-			}
+			if (!is_array($comment)) { $comment = explode("\n", $comment); }
+			$info['Comment'] = $comment;
 
 			if (!isset($domainInfo[$type][$name])) { $domainInfo[$type][$name] = array(); };
 			$domainInfo[$type][$name][] = $info;
@@ -615,4 +614,3 @@
 			return FALSE;
 		}
 	}
-
