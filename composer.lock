@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eb8435d5703cb514a3c285f4d414d908",
+    "content-hash": "8b68d7af482258958be2575aa1a07891",
     "packages": [
         {
             "name": "authy/php",
@@ -660,34 +660,37 @@
         },
         {
             "name": "mongodb/mongodb",
-            "version": "1.20.0",
+            "version": "1.21.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mongodb/mongo-php-library.git",
-                "reference": "75da9ea3b63d97b05e0e8648d8c09a17bc54c0b6"
+                "reference": "d216a5bfc62c9b63ba3523565a35856ab91f78d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/75da9ea3b63d97b05e0e8648d8c09a17bc54c0b6",
-                "reference": "75da9ea3b63d97b05e0e8648d8c09a17bc54c0b6",
+                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/d216a5bfc62c9b63ba3523565a35856ab91f78d9",
+                "reference": "d216a5bfc62c9b63ba3523565a35856ab91f78d9",
                 "shasum": ""
             },
             "require": {
                 "composer-runtime-api": "^2.0",
                 "ext-hash": "*",
                 "ext-json": "*",
-                "ext-mongodb": "^1.20.0",
-                "php": "^7.4 || ^8.0",
+                "ext-mongodb": "^1.21.0",
+                "php": "^8.1",
                 "psr/log": "^1.1.4|^2|^3",
                 "symfony/polyfill-php80": "^1.27",
                 "symfony/polyfill-php81": "^1.27"
             },
+            "replace": {
+                "mongodb/builder": "*"
+            },
             "require-dev": {
                 "doctrine/coding-standard": "^12.0",
-                "rector/rector": "^1.1",
+                "phpunit/phpunit": "^10.5.35",
+                "rector/rector": "^1.2",
                 "squizlabs/php_codesniffer": "^3.7",
-                "symfony/phpunit-bridge": "^5.2",
-                "vimeo/psalm": "^5.13"
+                "vimeo/psalm": "6.5.*"
             },
             "type": "library",
             "extra": {
@@ -731,9 +734,9 @@
             ],
             "support": {
                 "issues": "https://github.com/mongodb/mongo-php-library/issues",
-                "source": "https://github.com/mongodb/mongo-php-library/tree/1.20.0"
+                "source": "https://github.com/mongodb/mongo-php-library/tree/1.21.0"
             },
-            "time": "2024-09-25T12:54:08+00:00"
+            "time": "2025-02-28T11:14:09+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -2129,8 +2132,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
