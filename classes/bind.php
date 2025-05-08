@@ -428,11 +428,9 @@
 
 			if ($type == 'MX' || $type == 'CNAME' || $type == 'PTR' || $type == 'NS') {
 				$info['Address'] = do_idn_to_ascii($info['Address']);
-			} else if ($type == 'TXT') {
-				$info['Address'] = Bind::stringToTXTRecord($info['Address']);
 			}
 
-			if (!is_array($comment)) { $comment = explode("\n", $comment); }
+			if (!empty($comment) && !is_array($comment)) { $comment = explode("\n", $comment); }
 			$info['Comment'] = $comment;
 
 			if (!isset($domainInfo[$type][$name])) { $domainInfo[$type][$name] = array(); };
@@ -553,11 +551,13 @@
 						if ($bit !== 0 && empty($bit)) { $bit = $this->domain.'.'; }
 
 						if (isset($name['Comment']) && !empty($name['Comment'])) {
+							$lines[] = '; ' . json_encode($name['Comment']);
 							if (!is_array($name['Comment'])) { $name['Comment'] = explode("\n", $name['Comment']); }
 							foreach ($name['Comment'] as $comment) {
-								$lines[] = '; ' . str_replace("\r", '', str_replace("\n", '\n', $comment));
+								// $lines[] = '; ' . str_replace("\r", '', str_replace("\n", '\n', $comment));
 							}
 						}
+						if ($type == 'TXT') { $address = Bind::stringToTXTRecord($address); }
 						$lines[] = sprintf('%-30s %7s    IN %7s   %-6s %s', $bit, $ttl, $type, $priority, $address);
 					}
 				}
