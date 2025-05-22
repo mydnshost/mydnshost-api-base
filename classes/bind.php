@@ -553,10 +553,12 @@
 						if ($bit !== 0 && empty($bit)) { $bit = $this->domain.'.'; }
 
 						if (isset($name['Comment']) && !empty($name['Comment'])) {
-							$lines[] = '; ' . json_encode($name['Comment']);
 							if (!is_array($name['Comment'])) { $name['Comment'] = explode("\n", $name['Comment']); }
 							foreach ($name['Comment'] as $comment) {
-								// $lines[] = '; ' . str_replace("\r", '', str_replace("\n", '\n', $comment));
+								$commentStr = trim(str_replace("\r", '', str_replace("\n", '\n', $comment)));
+								if (!empty($commentStr)) {
+									$lines[] = '; ' . $commentStr;
+								}
 							}
 						}
 						if ($type == 'TXT') { $address = Bind::stringToTXTRecord($address); }
