@@ -416,7 +416,7 @@
 		 * @param $comment (optional) Comment to put above this record
 		 */
 		function setRecord($name, $type, $data, $ttl = '', $priority = '', $comment = []) {
-			$name = do_idn_to_ascii($name);
+			$name = ((empty($name) && $name !== '0' && $name !== 0) || $name === '@') ? '' : do_idn_to_ascii($name);
 			$domainInfo = $this->domainInfo;
 			if ($ttl == '') { $ttl = $domainInfo[' META ']['TTL']; }
 
