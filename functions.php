@@ -544,11 +544,11 @@
 	}
 
 	function do_idn_to_ascii($domain) {
-		return ($domain == '.') ? $domain : idn_to_ascii($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+		return ($domain == '.' || empty($domain)) ? $domain : idn_to_ascii($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
 	}
 
 	function do_idn_to_utf8($domain) {
-		return ($domain == '.') ? $domain : idn_to_utf8($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+		return ($domain == '.' || empty($domain)) ? $domain : idn_to_utf8($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
 	}
 
 	function findCommandPath($commands = []) {
