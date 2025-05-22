@@ -513,11 +513,13 @@
 			$lines[] = '; Written at '.date('r');
 			$lines[] = '; Zone Hash: '.$this->getZoneHash();
 
+			$defaultTTL = 86400;
+
 			// TTL and ORIGIN First
 			if (isset($domainInfo[' META ']['TTL'])) {
 				$lines[] = '$TTL ' . $domainInfo[' META ']['TTL'];
 			} else {
-				$lines[] = '$TTL 86400';
+				$lines[] = '$TTL ' . $defaultTTL;
 			}
 			$lines[] = '$ORIGIN '.$this->domain.'.';
 			// Now SOA
@@ -544,7 +546,7 @@
 
 				foreach ($bits as $bit => $names) {
 					foreach ($names as $name) {
-						if (isset($domainInfo[' META ']['TTL']) != $name['TTL']) { $ttl = $name['TTL']; } else { $ttl = ''; }
+						if (($domainInfo[' META ']['TTL'] ?? $defaultTTL) != $name['TTL']) { $ttl = $name['TTL']; } else { $ttl = ''; }
 						if ($type == 'MX' || $type == 'SRV' || $type == 'SVCB' || $type == 'HTTPS') { $priority = $name['Priority']; } else { $priority = ''; }
 						$address = $name['Address'];
 
