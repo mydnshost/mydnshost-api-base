@@ -572,7 +572,7 @@
 
 			if ($this->debugging) {
 				foreach ($lines as $line) {
-					$this->debug('parseZoneFile', $line);
+					$this->debug('getParsedZoneFile', $line);
 				}
 			}
 
