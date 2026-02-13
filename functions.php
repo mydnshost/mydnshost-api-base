@@ -364,6 +364,19 @@
 		}
 	}
 
+	function getStatsGroupInterval($time) {
+		$time = intval($time);
+		if ($time <= 3600) { return '60s'; }       // <= 1 hour
+		if ($time <= 43200) { return '5m'; }        // <= 12 hours
+		if ($time <= 172800) { return '15m'; }      // <= 48 hours
+		if ($time <= 604800) { return '1h'; }       // <= 1 week
+		if ($time <= 2592000) { return '6h'; }      // <= 1 month
+		if ($time <= 5184000) { return '12h'; }     // <= 2 months
+		if ($time <= 15552000) { return '1d'; }     // <= 6 months
+		// Beyond 6 months: scale dynamically, targeting ~200 data points
+		return ceil($time / (200 * 86400)) . 'd';
+	}
+
 	function getGlobalQueriesPerServer($type = 'raw', $time = '3600') {
 		try {
 			$database = getInfluxDB();
@@ -379,7 +392,7 @@
 
 			$result = $result->from('opcode_query')
 			                 ->where(["time > now() - " . $time . "s"])
-			                 ->groupby("time(60s)")->groupby("host")
+			                 ->groupby("time(" . getStatsGroupInterval($time) . ")")->groupby("host")
 			                 ->getResultSet();
 
 			$stats = [];
@@ -416,7 +429,7 @@
 
 			$result = $result->from('qtype')
 			                 ->where(["time > now() - " . $time . "s"])
-			                 ->groupby("time(60s)")->groupby("qtype")
+			                 ->groupby("time(" . getStatsGroupInterval($time) . ")")->groupby("qtype")
 			                 ->getResultSet();
 
 			$stats = [];
@@ -467,7 +480,7 @@
 
 			$result = $result->from('zone_qtype')
 			                 ->where($where)
-			                 ->groupby("time(60s)")->groupby("zone")
+			                 ->groupby("time(" . getStatsGroupInterval($time) . ")")->groupby("zone")
 			                 ->getResultSet();
 
 			$stats = [];
@@ -515,7 +528,7 @@
 
 			$result = $result->from('zone_qtype')
 			                 ->where(["time > now() - " . $time . "s", "\"zone\" = '" . $domain->getDomain() . "'"])
-			                 ->groupby("time(60s)")->groupby("zone")->groupby("qtype")
+			                 ->groupby("time(" . getStatsGroupInterval($time) . ")")->groupby("zone")->groupby("qtype")
 			                 ->getResultSet();
 
 			// $results = json_decode($result->getRaw(), true);
