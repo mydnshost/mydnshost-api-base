@@ -94,6 +94,9 @@ jobs:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message || github.event.client_payload.commit_message || '' }}
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          if [ -z "${COMMIT_MESSAGE}" ]; then
+            COMMIT_MESSAGE=$(git log -1 --format=%s 2>/dev/null || true)
+          fi
           FIRST_LINE=$(echo "${COMMIT_MESSAGE}" | head -1)
           for REPO in mydnshost/mydnshost-api mydnshost/mydnshost-containerlogger mydnshost/mydnshost-dispatcher mydnshost/mydnshost-joblogger mydnshost/mydnshost-workers; do
             jq -n \
