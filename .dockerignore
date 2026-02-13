@@ -1,0 +1,10 @@
+.git
+.github
+.gitignore
+.gitmodules
+.dockerignore
+*.md
+LICENSE
+test/
+test.php
+config.local.php

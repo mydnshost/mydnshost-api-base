@@ -330,7 +330,11 @@
 
 			$result = [];
 			foreach ($logs as $log) {
-				$result[] = ['timestamp' => $log['timestamp'], 'message' => $log['message']];
+				$ts = $log['timestamp'];
+				if ($ts instanceof \MongoDB\BSON\UTCDateTime) {
+					$ts = $ts->toDateTime()->format('r');
+				}
+				$result[] = ['timestamp' => $ts, 'message' => $log['message']];
 			}
 
 			return $result;
