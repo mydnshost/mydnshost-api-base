@@ -40,6 +40,15 @@
 		}
 
 		/**
+		 * Find an already created job.
+		 *
+		 * @param $job Job id
+		 */
+		public function find($job) {
+			return Job::load(DB::get(), $job);
+		}
+
+		/**
 		 * Publish a job.
 		 *
 		 * @param $job Job to publish
