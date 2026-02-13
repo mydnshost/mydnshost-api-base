@@ -631,6 +631,14 @@ ALTER TABLE `domains` ADD INDEX `domainverificationstatetime` (`verificationstat
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// Add cancelled state to jobs
+			// ------------------------------------------------------------------------
+			$dataChanges[45] = new DBChange(<<<MYSQLQUERY
+ALTER TABLE `jobs` MODIFY `state` ENUM('created', 'blocked', 'started', 'finished', 'error', 'cancelled') NOT NULL DEFAULT 'created';
+MYSQLQUERY
+);
+
 			return $dataChanges;
 		}
 	}
