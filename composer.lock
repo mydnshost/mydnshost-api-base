@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ebf0daf5ac63a3ac8520107548b198b7",
+    "content-hash": "fbbe753ed839889da6d7d2f262e5e95e",
     "packages": [
         {
             "name": "authy/php",
@@ -1796,48 +1796,6 @@
                 }
             ],
             "time": "2024-06-11T12:45:25+00:00"
-        },
-        {
-            "name": "shanemcc/php-db",
-            "version": "0.5.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ShaneMcC/php-db.git",
-                "reference": "f9330771db250734883004470c65080193453796"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ShaneMcC/php-db/zipball/f9330771db250734883004470c65080193453796",
-                "reference": "f9330771db250734883004470c65080193453796",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "shanemcc\\phpdb\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Shane Mc Cormack",
-                    "email": "shanemcc@gmail.com",
-                    "homepage": "http://www.dataforce.org.uk/"
-                }
-            ],
-            "description": "Basic PHP ORM",
-            "homepage": "https://github.com/shanemcc/php-db",
-            "support": {
-                "issues": "https://github.com/ShaneMcC/php-db/issues",
-                "source": "https://github.com/ShaneMcC/php-db/tree/0.5.4"
-            },
-            "time": "2026-02-14T21:57:11+00:00"
         },
         {
             "name": "symfony/console",

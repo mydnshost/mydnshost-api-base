@@ -1,0 +1,3 @@
+[submodule "php-db"]
+	path = php-db
+	url = https://github.com/shanemcc/php-db
