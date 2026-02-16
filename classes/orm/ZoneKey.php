@@ -313,8 +313,25 @@ class ZoneKey extends DBObject {
 		// Extract DS records from DNSKEY records and store public key data.
 		$tempdir = tempdir(sys_get_temp_dir(), 'zonekey');
 		file_put_contents($tempdir . '/zone.key', implode("\n", $public));
-		exec(findCommandPath(['dsfromkey', 'dnssec-dsfromkey']) . ' -a SHA-1 -a SHA-256 -a SHA-384 ' . escapeshellarg($tempdir . '/zone.key') . ' 2>/dev/null', $publicData);
+		$this->updateKeyRecords($tempdir . '/zone.key');
 		deleteDir($tempdir);
+
+		return $this;
+	}
+
+	public function updateKeyRecords($filename) {
+		$publicData = [];
+
+		// Read DNSKEY records from the source key file.
+		$fileLines = file($filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		foreach ($fileLines as $line) {
+			if (!startsWith($line, ';') && !empty(trim($line))) {
+				$publicData[] = $line;
+			}
+		}
+
+		// Extract DS records from DNSKEY records.
+		exec(findCommandPath(['dsfromkey', 'dnssec-dsfromkey']) . ' -a SHA-1 -a SHA-256 -a SHA-384 ' . escapeshellarg($filename) . ' 2>/dev/null', $publicData);
 		$this->setKeyPublic(implode("\n", $publicData));
 
 		// Extract Flags and Key ID from public data.
