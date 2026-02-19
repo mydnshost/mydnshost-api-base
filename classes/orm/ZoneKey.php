@@ -19,6 +19,9 @@ class ZoneKey extends DBObject {
 	                             'syncPublish' => NULL,
 	                             'syncDelete' => NULL,
 	                             'comment' => NULL,
+	                             'is_signing' => NULL,
+	                             'at_parent' => NULL,
+	                             'signing_check_time' => 0,
 	                            ];
 	protected static $_key = 'id';
 	protected static $_table = 'zonekeys';
@@ -243,6 +246,32 @@ class ZoneKey extends DBObject {
 		return $this->getData('comment');
 	}
 
+	public function setIsSigning($value) {
+		return $this->setData('is_signing', $value === NULL ? NULL : (parseBool($value) ? 'true' : 'false'));
+	}
+
+	public function getIsSigning() {
+		$val = $this->getData('is_signing');
+		return $val === NULL ? NULL : parseBool($val);
+	}
+
+	public function setAtParent($value) {
+		return $this->setData('at_parent', $value === NULL ? NULL : (parseBool($value) ? 'true' : 'false'));
+	}
+
+	public function getAtParent() {
+		$val = $this->getData('at_parent');
+		return $val === NULL ? NULL : parseBool($val);
+	}
+
+	public function setSigningCheckTime($value) {
+		return $this->setData('signing_check_time', $value);
+	}
+
+	public function getSigningCheckTime() {
+		return intval($this->getData('signing_check_time'));
+	}
+
 	/**
 	 * Load an object from the database based on domain_id AND the key id.
 	 *
@@ -275,6 +304,8 @@ class ZoneKey extends DBObject {
 		$result = parent::toArray();
 		foreach (['id', 'domain_id', 'key_id', 'flags'] as $k) { if (!isset($result[$k])) { continue; }; $result[$k] = intvalOrNull($this->getData($k)); }
 		foreach (static::$_dates as $k) { if (!isset($result[$k])) { continue; }; $result[$k] = intvalOrNull($this->getData($k)); }
+		foreach (['is_signing', 'at_parent'] as $k) { $result[$k] = $this->getData($k) === NULL ? NULL : parseBool($this->getData($k)); }
+		$result['signing_check_time'] = intval($this->getData('signing_check_time'));
 		return $result;
 	}
 

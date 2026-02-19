@@ -15,6 +15,7 @@ class Domain extends DBObject {
 	                             'aliasof' => NULL,
 	                             'verificationstate' => 'unknown',
 	                             'verificationstatetime' => 0,
+	                             'dnssecstate' => 'unknown',
 	                            ];
 	protected static $_key = 'id';
 	protected static $_table = 'domains';
@@ -190,6 +191,14 @@ class Domain extends DBObject {
 
 	public function getVerificationStateTime() {
 		return intval($this->getData('verificationstatetime'));
+	}
+
+	public function setDnssecState($value) {
+		return $this->setData('dnssecstate', $value);
+	}
+
+	public function getDnssecState() {
+		return $this->getData('dnssecstate');
 	}
 
 	/**

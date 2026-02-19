@@ -664,6 +664,17 @@ ALTER TABLE `records` ADD COLUMN `remote_value_hash` VARCHAR(64) DEFAULT NULL AF
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// DNSSEC verification state tracking
+			// ------------------------------------------------------------------------
+			$dataChanges[49] = new DBChange(<<<MYSQLQUERY
+ALTER TABLE `zonekeys` ADD COLUMN `is_signing` ENUM('false','true') DEFAULT NULL AFTER `comment`;
+ALTER TABLE `zonekeys` ADD COLUMN `at_parent` ENUM('false','true') DEFAULT NULL AFTER `is_signing`;
+ALTER TABLE `zonekeys` ADD COLUMN `signing_check_time` int(11) NOT NULL DEFAULT 0 AFTER `at_parent`;
+ALTER TABLE `domains` ADD COLUMN `dnssecstate` varchar(255) DEFAULT 'unknown' AFTER `verificationstatetime`;
+MYSQLQUERY
+);
+
 			return $dataChanges;
 		}
 	}
