@@ -238,6 +238,10 @@ class Record extends DBObject {
 			$content[$targetPos] = do_idn_to_ascii($content[$targetPos]);
 			$this->setContent(implode(' ', $content));
 		}
+
+		if ($type != 'RRCLONE' && $this->getRemoteDomainID() !== null) {
+			$this->setRemoteDomainID(null);
+		}
 	}
 
 	public function updateSOAContent($parsed) {
