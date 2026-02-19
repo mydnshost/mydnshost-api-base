@@ -30,14 +30,18 @@
 		 * @param $job Job name
 		 * @param $args Job Arguments
 		 * @param $reason Optional reason for creating the job
+		 * @param $createdByJob Optional ID of the job that created this one
 		 */
-		public function create($jobname, $args, $reason = null) {
+		public function create($jobname, $args, $reason = null, $createdByJob = null) {
 			$jobname = strtolower($jobname);
 
 			$job = new Job(DB::get());
 			$job->setName($jobname)->setJobData($args)->setCreated(time())->setState('created');
 			if ($reason !== null) {
 				$job->setReason($reason);
+			}
+			if ($createdByJob !== null) {
+				$job->setCreatedByJob($createdByJob);
 			}
 			$job->save();
 

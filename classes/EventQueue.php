@@ -8,6 +8,7 @@
 		private static $instance = null;
 
 		private $subscribers = [];
+		private $actor = null;
 
 		/**
 		 * Get the EventQueue instance.
@@ -23,6 +24,24 @@
 		}
 
 		/**
+		 * Set actor metadata to include with published events.
+		 *
+		 * @param $actor Array of actor info (type, email, key, etc.) or null
+		 */
+		public function setActor($actor) {
+			$this->actor = $actor;
+		}
+
+		/**
+		 * Get the current actor metadata.
+		 *
+		 * @return Actor array or null
+		 */
+		public function getActor() {
+			return $this->actor;
+		}
+
+		/**
 		 * Publish an event to the bus.
 		 *
 		 * @param $event Event name
@@ -33,7 +52,11 @@
 				RabbitMQ::get()->getChannel()->exchange_declare('events', 'topic', false, false, false);
 
 				$event = strtolower($event);
-				$msg = new AMQPMessage(json_encode(['event' => $event, 'args' => $args]));
+				$payload = ['event' => $event, 'args' => $args];
+				if ($this->actor !== null) {
+					$payload['actor'] = $this->actor;
+				}
+				$msg = new AMQPMessage(json_encode($payload));
 				RabbitMQ::get()->getChannel()->basic_publish($msg, 'events', 'event.' . $event);
 				return true;
 			} catch (Exception $ex) {
@@ -58,6 +81,7 @@
 		public function handleSubscribers($event) {
 			if (is_array($event) && isset($event['event'])) {
 				if (array_key_exists($event['event'], $this->subscribers)) {
+					$this->actor = $event['actor'] ?? null;
 					foreach ($this->subscribers[$event['event']] as $callable) {
 						try {
 							call_user_func_array($callable, isset($event['args']) ? $event['args'] : []);
@@ -67,6 +91,7 @@
 							}
 						}
 					}
+					$this->actor = null;
 				}
 			}
 		}

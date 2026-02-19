@@ -647,6 +647,15 @@ ALTER TABLE `jobs` ADD COLUMN `reason` varchar(255) DEFAULT NULL AFTER `data`;
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// Job provenance tracking
+			// ------------------------------------------------------------------------
+			$dataChanges[47] = new DBChange(<<<MYSQLQUERY
+ALTER TABLE `jobs` ADD COLUMN `created_by_job` INT(11) NULL DEFAULT NULL AFTER `reason`;
+ALTER TABLE `jobs` ADD CONSTRAINT `job_created_by` FOREIGN KEY (`created_by_job`) REFERENCES `jobs`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+MYSQLQUERY
+);
+
 			return $dataChanges;
 		}
 	}

@@ -7,6 +7,7 @@ class Job extends DBObject {
 	                             'name' => NULL,
 	                             'data' => NULL,
 	                             'reason' => NULL,
+	                             'created_by_job' => NULL,
 	                             'created' => NULL,
 	                             'started' => NULL,
 	                             'finished' => NULL,
@@ -55,6 +56,10 @@ class Job extends DBObject {
 		return $this->setData('reason', $value);
 	}
 
+	public function setCreatedByJob($value) {
+		return $this->setData('created_by_job', $value);
+	}
+
 	public function getID() {
 		return intvalOrNull($this->getData('id'));
 	}
@@ -89,6 +94,10 @@ class Job extends DBObject {
 
 	public function getReason() {
 		return $this->getData('reason');
+	}
+
+	public function getCreatedByJob() {
+		return intvalOrNull($this->getData('created_by_job'));
 	}
 
 	/**
@@ -165,6 +174,68 @@ class Job extends DBObject {
 
 	}
 
+	/**
+	 * Get jobs that were created by this job (via created_by_job).
+	 */
+	public function getChildJobs() {
+		$query = 'SELECT `id` FROM `jobs` WHERE `created_by_job` = :parent';
+		$params = [':parent' => $this->getID()];
+		$statement = $this->getDB()->getPDO()->prepare($query);
+		$statement->execute($params);
+		$result = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+		$children = [];
+		foreach ($result as $row) {
+			$children[] = $row['id'];
+		}
+
+		return Job::findByID($this->getDB(), $children);
+	}
+
+	/**
+	 * Get all jobs related to this one by traversing both created_by_job
+	 * and job_depends links in both directions (BFS).
+	 */
+	public function getRelatedJobs() {
+		$visited = [];
+		$queue = [$this->getID()];
+		$jobs = [];
+
+		while (!empty($queue)) {
+			$id = array_shift($queue);
+			if (isset($visited[$id])) continue;
+			$visited[$id] = true;
+
+			$j = ($id == $this->getID()) ? $this : Job::load($this->getDB(), $id);
+			if ($j === false) continue;
+			$jobs[$id] = $j;
+
+			// Follow created_by_job upward
+			if ($j->getCreatedByJob() !== null && !isset($visited[$j->getCreatedByJob()])) {
+				$queue[] = $j->getCreatedByJob();
+			}
+			// Follow child jobs downward (created_by_job)
+			foreach ($j->getChildJobs() as $child) {
+				if (!isset($visited[$child->getID()])) {
+					$queue[] = $child->getID();
+				}
+			}
+			// Follow dependencies both ways
+			foreach ($j->getDependsOn() as $dep) {
+				if (!isset($visited[$dep->getID()])) {
+					$queue[] = $dep->getID();
+				}
+			}
+			foreach ($j->getDependants() as $dep) {
+				if (!isset($visited[$dep->getID()])) {
+					$queue[] = $dep->getID();
+				}
+			}
+		}
+
+		return $jobs;
+	}
+
 	public function validate() {
 		return true;
 	}
@@ -205,7 +276,7 @@ class Job extends DBObject {
 
 	public function toArray() {
 		$result = parent::toArray();
-		foreach (['id', 'created', 'started', 'finished'] as $k) { if (!isset($result[$k])) { continue; }; $result[$k] = intvalOrNull($this->getData($k)); }
+		foreach (['id', 'created', 'started', 'finished', 'created_by_job'] as $k) { if (!isset($result[$k])) { continue; }; $result[$k] = intvalOrNull($this->getData($k)); }
 		return $result;
 	}
 
