@@ -656,6 +656,14 @@ ALTER TABLE `jobs` ADD CONSTRAINT `job_created_by` FOREIGN KEY (`created_by_job`
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// RRCLONE hash tracking for cascade optimization
+			// ------------------------------------------------------------------------
+			$dataChanges[48] = new DBChange(<<<MYSQLQUERY
+ALTER TABLE `records` ADD COLUMN `remote_value_hash` VARCHAR(64) DEFAULT NULL AFTER `remote_domain_id`;
+MYSQLQUERY
+);
+
 			return $dataChanges;
 		}
 	}

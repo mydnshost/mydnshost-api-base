@@ -8,6 +8,7 @@ class Record extends DBObject {
 	protected static $_fields = ['id' => NULL,
 	                             'domain_id' => NULL,
 	                             'remote_domain_id' => NULL,
+	                             'remote_value_hash' => NULL,
 	                             'name' => NULL,
 	                             'type' => NULL,
 	                             'content' => NULL,
@@ -75,6 +76,10 @@ class Record extends DBObject {
 		return $this->setData('remote_domain_id', $value);
 	}
 
+	public function setRemoteValueHash($value) {
+		return $this->setData('remote_value_hash', $value);
+	}
+
 	public function setName($value) {
 		return $this->setData('name', do_idn_to_ascii($value));
 	}
@@ -136,6 +141,10 @@ class Record extends DBObject {
 
 	public function getRemoteDomainID() {
 		return intvalOrNull($this->getData('remote_domain_id'));
+	}
+
+	public function getRemoteValueHash() {
+		return $this->getData('remote_value_hash');
 	}
 
 	public function getName() {
@@ -216,6 +225,7 @@ class Record extends DBObject {
 
 	public function toArray() {
 		$result = parent::toArray();
+		unset($result['remote_value_hash']);
 		foreach (['disabled'] as $k) { if (!isset($result[$k])) { continue; }; $result[$k] = parseBool($this->getData($k)); }
 		foreach (['id', 'domain_id', 'remote_domain_id', 'ttl', 'priority', 'changed_at', 'changed_by'] as $k) { if (!isset($result[$k])) { continue; }; $result[$k] = intvalOrNull($this->getData($k)); }
 		return $result;
@@ -241,6 +251,7 @@ class Record extends DBObject {
 
 		if ($type != 'RRCLONE' && $this->getRemoteDomainID() !== null) {
 			$this->setRemoteDomainID(null);
+			$this->setRemoteValueHash(null);
 		}
 	}
 

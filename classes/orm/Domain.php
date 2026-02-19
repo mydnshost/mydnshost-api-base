@@ -614,6 +614,7 @@ class Domain extends DBObject {
 				}
 
 				$validRecordCount = 0;
+				$hashParts = [];
 
 				foreach ($sourceRecords as $sourceRecord) {
 					if (empty($importTypes) || in_array($sourceRecord['Type'], $importTypes) || in_array('*', $importTypes)) {
@@ -625,7 +626,16 @@ class Domain extends DBObject {
 						$clonedRecordsInfo->addRecord($name, $sourceRecord['Type'], $sourceRecord['Address'], $ttl, $priority, $comment);
 						$hasNS = $hasNS || ($sourceRecord['Type'] == "NS" && $record->getName() == $recordDomain->getDomain());
 						$validRecordCount++;
+
+						$hashParts[] = $sourceRecord['Type'] . '|' . $sourceRecord['Address'] . '|' . $ttl . '|' . ($priority ?? '');
 					}
+				}
+
+				// Compute and store hash of expanded RRCLONE records for cascade optimization
+				sort($hashParts);
+				$newHash = empty($hashParts) ? null : hash('sha256', implode("\n", $hashParts));
+				if ($record->getRemoteValueHash() !== $newHash) {
+					$record->setRemoteValueHash($newHash)->save();
 				}
 
 				if ($validRecordCount == 0) {
