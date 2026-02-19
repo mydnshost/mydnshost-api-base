@@ -639,6 +639,14 @@ ALTER TABLE `jobs` MODIFY `state` ENUM('created', 'blocked', 'started', 'finishe
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// Job reason field
+			// ------------------------------------------------------------------------
+			$dataChanges[46] = new DBChange(<<<MYSQLQUERY
+ALTER TABLE `jobs` ADD COLUMN `reason` varchar(255) DEFAULT NULL AFTER `data`;
+MYSQLQUERY
+);
+
 			return $dataChanges;
 		}
 	}

@@ -6,6 +6,7 @@ class Job extends DBObject {
 	protected static $_fields = ['id' => NULL,
 	                             'name' => NULL,
 	                             'data' => NULL,
+	                             'reason' => NULL,
 	                             'created' => NULL,
 	                             'started' => NULL,
 	                             'finished' => NULL,
@@ -50,6 +51,10 @@ class Job extends DBObject {
 		return $this->setData('result', $value);
 	}
 
+	public function setReason($value) {
+		return $this->setData('reason', $value);
+	}
+
 	public function getID() {
 		return intvalOrNull($this->getData('id'));
 	}
@@ -80,6 +85,10 @@ class Job extends DBObject {
 
 	public function getResult() {
 		return $this->getData('result');
+	}
+
+	public function getReason() {
+		return $this->getData('reason');
 	}
 
 	/**

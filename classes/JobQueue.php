@@ -29,12 +29,17 @@
 		 *
 		 * @param $job Job name
 		 * @param $args Job Arguments
+		 * @param $reason Optional reason for creating the job
 		 */
-		public function create($jobname, $args) {
+		public function create($jobname, $args, $reason = null) {
 			$jobname = strtolower($jobname);
 
 			$job = new Job(DB::get());
-			$job->setName($jobname)->setJobData($args)->setCreated(time())->setState('created')->save();
+			$job->setName($jobname)->setJobData($args)->setCreated(time())->setState('created');
+			if ($reason !== null) {
+				$job->setReason($reason);
+			}
+			$job->save();
 
 			return $job;
 		}
