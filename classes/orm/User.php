@@ -33,6 +33,7 @@ class User extends DBObject {
 	                                       '2fa_push',
 	                                       'admin_managed_user',
 	                                       'manage_blocks',
+	                                       'system_audit_log',
 	                                      ];
 
     // Permissions that should not be disabled if the user has not accepted the
@@ -257,6 +258,22 @@ class User extends DBObject {
 		$userSearch = User::getSearch($db);
 		$userSearch->where('email', $address);
 		return $userSearch->find('email');
+	}
+
+	/**
+	 * Check if any user in the system has a given permission.
+	 *
+	 * @param $db Database object.
+	 * @param $permission Permission to check for.
+	 * @return bool TRUE if at least one user has the permission.
+	 */
+	public static function anyUserHasPermission($db, $permission) {
+		$userSearch = User::getSearch($db);
+		$userSearch->join('permissions', '`users`.`id` = `permissions`.`user_id`', 'INNER');
+		$userSearch->where('permission', $permission);
+		$userSearch->limit(0, 1);
+		$result = $userSearch->search([]);
+		return !empty($result);
 	}
 
 	/**

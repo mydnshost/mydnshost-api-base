@@ -675,6 +675,26 @@ ALTER TABLE `domains` ADD COLUMN `dnssecstate` varchar(255) DEFAULT 'unknown' AF
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// Audit Log
+			// ------------------------------------------------------------------------
+			$dataChanges[50] = new DBChange(<<<MYSQLQUERY
+CREATE TABLE `audit_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `time` INT UNSIGNED NOT NULL,
+  `actor` VARCHAR(255) NOT NULL DEFAULT '',
+  `type` VARCHAR(100) NOT NULL,
+  `args` TEXT NOT NULL,
+  `summary` TEXT NOT NULL,
+  `extendedsummary` TEXT NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  INDEX `idx_audit_time` (`time`),
+  INDEX `idx_audit_type` (`type`),
+  INDEX `idx_audit_actor` (`actor`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+MYSQLQUERY
+);
+
 			return $dataChanges;
 		}
 	}
