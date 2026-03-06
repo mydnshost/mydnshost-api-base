@@ -138,6 +138,14 @@
 	// $config['domainlogs']['source'] = getEnvOrDefault('DOMAINLOGS_SOURCE', 'file:/var/log/bind.log');
 	$config['domainlogs']['source'] = getEnvOrDefault('DOMAINLOGS_SOURCE', 'docker:bind');
 
+	// Admin elevation feature
+	// When enabled, admin write operations require a short-lived admin token
+	// obtained by verifying identity (2FA code or password re-entry).
+	$config['admin_elevation_enabled'] = parseBool(getEnvOrDefault('ADMIN_ELEVATION_ENABLED', 'false'));
+	$config['admin_elevation_type'] = getEnvOrDefault('ADMIN_ELEVATION_TYPE', '2fa'); // '2fa' or 'password'
+	$config['admin_elevation_ttl'] = (int)getEnvOrDefault('ADMIN_ELEVATION_TTL', 900);
+	$config['admin_jwtsecret'] = getEnvOrDefault('ADMIN_JWT_SECRET', '');
+
 	// Local configuration.
 	if (file_exists(dirname(__FILE__) . '/config.local.php')) {
 		include(dirname(__FILE__) . '/config.local.php');

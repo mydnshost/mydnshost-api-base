@@ -58,6 +58,24 @@ abstract class RouterMethod {
 	}
 
 	/**
+	 * Check if admin elevation is required and validated.
+	 *
+	 * Admin elevation is required for write operations when the feature
+	 * is enabled, the user is NOT using an API key with admin_features,
+	 * and no valid admin token has been provided.
+	 *
+	 * @throws RouterMethod_AdminElevationRequired if elevation is needed
+	 *         but no valid admin token is present.
+	 */
+	public function requireAdminElevation() {
+		if (!getAdminElevationEnabled()) { return; }
+		if ($this->getRequestMethod() === 'GET') { return; }
+		if ($this->hasContextKey('key') && $this->getContextKey('key')->getAdminFeatures()) { return; }
+		if ($this->hasContextKey('admin_elevated') && $this->getContextKey('admin_elevated') === true) { return; }
+		throw new RouterMethod_AdminElevationRequired();
+	}
+
+	/**
 	 * Get the API Context for this method.
 	 *
 	 * @return The API context for this method.

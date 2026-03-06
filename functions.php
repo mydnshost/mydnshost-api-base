@@ -269,6 +269,26 @@
 		return $config['sitename'];
 	}
 
+	function getAdminElevationEnabled() {
+		global $config;
+		return $config['admin_elevation_enabled'];
+	}
+
+	function getAdminElevationType() {
+		global $config;
+		return $config['admin_elevation_type'];
+	}
+
+	function getAdminElevationTTL() {
+		global $config;
+		return $config['admin_elevation_ttl'];
+	}
+
+	function getAdminJWTSecret() {
+		global $config;
+		return $config['admin_jwtsecret'];
+	}
+
 	/**
 	 * Get header Authorization
 	 */
