@@ -100,7 +100,7 @@ jobs:
             COMMIT_MESSAGE=$(git log -1 --format=%s 2>/dev/null || true)
           fi
           FIRST_LINE=$(echo "${COMMIT_MESSAGE}" | head -1)
-          for REPO in mydnshost/mydnshost-api mydnshost/mydnshost-containerlogger mydnshost/mydnshost-dispatcher mydnshost/mydnshost-joblogger mydnshost/mydnshost-workers; do
+          for REPO in mydnshost/mydnshost-api mydnshost/mydnshost-containerlogger mydnshost/mydnshost-dispatcher mydnshost/mydnshost-auditlogger mydnshost/mydnshost-joblogger mydnshost/mydnshost-workers; do
             jq -n \
               --arg source "${{ github.repository }}" \
               --arg commit "${{ github.sha }}" \
