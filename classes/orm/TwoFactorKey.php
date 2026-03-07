@@ -456,9 +456,12 @@ class TwoFactorKey extends DBObject {
 
 		$authy_api = new Authy\AuthyApi($config['twofactor']['authy']['apikey']);
 
-		$verification = $authy_api->verifyToken($this->getKey(), $code);
-
-		return $verification->ok();
+		try {
+			$verification = $authy_api->verifyToken($this->getKey(), $code);
+			return $verification->ok();
+		} catch (Authy\AuthyFormatException) {
+			return FALSE;
+		}
 	}
 
 	public function postDelete($result) {
