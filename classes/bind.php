@@ -251,7 +251,11 @@
 					$lowerDomain = strtolower($this->domain) . '.';
 
 					if ($type == 'SOA') {
-						if ($this->domain !== '' && $lowerName != $lowerDomain) {
+						// Also accept the zone name written without the trailing '.'
+						// (as in Cloudflare exports), even though strictly that is a
+						// relative name.
+						$isApex = ($lowerName == $lowerDomain) || (strtolower($bits[0]) == strtolower($this->domain));
+						if ($this->domain !== '' && !$isApex) {
 							throw new Exception('SOA record is not at the zone apex: ' . $testline);
 						}
 						$name = $this->domain . '.';
