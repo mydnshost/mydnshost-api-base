@@ -231,9 +231,16 @@
 					}
 					$lastName = $name;
 
-					// We only support records in the IN class.
+					// We only support records in the IN class, and don't support
+					// generic (RFC 3597) record data.
+					$skipReason = NULL;
 					if ($class != 'IN' && $class != 'CLASS1') {
-						$this->skipped[] = $testline . ' (unsupported class)';
+						$skipReason = 'unsupported class';
+					} else if (($bits[$pos] ?? NULL) === '\\#') {
+						$skipReason = 'generic record data is not supported';
+					}
+					if ($skipReason !== NULL) {
+						$this->skipped[] = trim(implode(' ', $bits)) . ' (' . $skipReason . ')';
 						$lastComment = [];
 						continue;
 					}
