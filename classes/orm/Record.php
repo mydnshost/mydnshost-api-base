@@ -301,7 +301,7 @@ class Record extends DBObject {
 			}
 		}
 
-		if ($type == 'MX' || $type == 'SRV' || $type == 'SVCB' || $type == 'HTTPS') {
+		if (in_array($type, Bind::PRIORITY_RRS)) {
 			if ($this->getPriority() === NULL || $this->getPriority() === '') {
 				throw new ValidationFailed('Records of '. $type . ' require a priority.');
 			} else if (!preg_match('#^[0-9]+$#', $this->getPriority())) {

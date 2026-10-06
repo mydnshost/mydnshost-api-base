@@ -4,6 +4,9 @@
 	 * This class allows for manipulating bind zone files.
 	 */
 	class Bind {
+		/** Record types that have a priority field. */
+		const PRIORITY_RRS = ['MX', 'SRV', 'SVCB', 'HTTPS'];
+
 		/** Where are zone files stored? (No trailing /) */
 		private $zonedirectory = '';
 		/** What domain is this instance of the class for? */
@@ -263,13 +266,11 @@
 								$haveZoneTTL = true;
 							}
 							break;
-						case 'MX':
-						case 'SRV':
-						case 'HTTPS':
-						case 'SVCB':
-							$info['Priority'] = $bits[$pos++];
-							// Fall through
 						default:
+							if (in_array($type, Bind::PRIORITY_RRS)) {
+								$info['Priority'] = $bits[$pos++];
+							}
+
 							// Remove any comments stuck to the end.
 							$addr = array();
 							for ($j = $pos; $j < count($bits); $j++) { $addr[] = $bits[$j]; }
@@ -492,7 +493,7 @@
 
 			$info['Address'] = $data;
 			$info['TTL'] = $ttl;
-			if ($type == 'MX' || $type == 'SRV' || $type == 'SVCB' || $type == 'HTTPS') {
+			if (in_array($type, Bind::PRIORITY_RRS)) {
 				$info['Priority'] = $priority;
 			}
 
@@ -617,7 +618,7 @@
 				foreach ($bits as $bit => $names) {
 					foreach ($names as $name) {
 						if (($domainInfo[' META ']['TTL'] ?? $defaultTTL) != $name['TTL']) { $ttl = $name['TTL']; } else { $ttl = ''; }
-						if ($type == 'MX' || $type == 'SRV' || $type == 'SVCB' || $type == 'HTTPS') { $priority = $name['Priority']; } else { $priority = ''; }
+						if (in_array($type, Bind::PRIORITY_RRS)) { $priority = $name['Priority']; } else { $priority = ''; }
 						$address = $name['Address'];
 
 						if ($bit !== 0 && empty($bit)) { $bit = $this->domain.'.'; }
