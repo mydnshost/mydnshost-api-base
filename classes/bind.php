@@ -298,7 +298,8 @@
 		 * comment (anything from an unquoted ';' onwards). Unquoted parentheses
 		 * are replaced with spaces, and the change in parenthesis depth is
 		 * returned so that records spanning multiple lines can be joined.
-		 * Anything inside double-quoted strings (eg TXT records) is left alone.
+		 * Anything inside double-quoted strings (eg TXT records) or escaped with
+		 * a '\' is left alone.
 		 *
 		 * @param $line Line to split
 		 * @return Array of [data, comment, change in parenthesis depth]
@@ -310,7 +311,7 @@
 			$inQuote = false;
 			for ($i = 0; $i < strlen($line); $i++) {
 				$c = $line[$i];
-				if ($inQuote && $c == '\\' && $i + 1 < strlen($line)) {
+				if ($c == '\\' && $i + 1 < strlen($line)) {
 					$data .= $c . $line[++$i];
 					continue;
 				}
@@ -334,28 +335,30 @@
 		/**
 		 * Parse a TXT Record into an unquoted string.
 		 *
+		 * The input is one or more strings, each either quoted or a bare word,
+		 * which are joined together. Escapes are decoded the same way as bind
+		 * does: \DDD is the byte with that decimal value, and \X is just X.
+		 *
 		 * @param $input Input string to use as txt record.
 		 * @return Single-String version of input, without quotes.
 		 */
 		public static function parseTXTRecord($input) {
-			// If there are no spaces and no quotes, then just use input as-is.
-			if (preg_match('#^[^\s"]+$#', $input, $m)) { return $input; }
-			// TODO:  I think I'm technically wrong still here, as I'll still
-			//        require a string to be quoted if you want to put a " in
-			//        it somewhere. Currently the input: foo"bar will fall
-			//        through to below which will match it as "bar"
-
-			$last = '';
 			$output = '';
 			$inQuote = false;
 			for ($i = 0; $i < strlen($input); $i++) {
 				$c = $input[$i];
-				if ($c == '"' && $last != '\\') { $inQuote = !$inQuote; }
-				else if ($inQuote) {
-					if ($c == '"' && $last == '\\') { $output = substr($output, 0, -1); }
+				if ($c == '\\' && $i + 1 < strlen($input)) {
+					if (preg_match('#^[0-9]{3}$#', substr($input, $i + 1, 3))) {
+						$output .= chr((int)substr($input, $i + 1, 3));
+						$i += 3;
+					} else {
+						$output .= $input[++$i];
+					}
+				} else if ($c == '"') {
+					$inQuote = !$inQuote;
+				} else if ($inQuote || !ctype_space($c)) {
 					$output .= $c;
 				}
-				$last = $c;
 			}
 
 			return $output;
@@ -363,7 +366,8 @@
 
 		/**
 		 * Convert a string to a TXT record, splitting it if needed and escaping
-		 * any instances of " within the string.
+		 * any instances of " or \ (and any control characters) within the
+		 * string. This is the inverse of parseTXTRecord.
 		 *
 		 * @param $input Input string to use as txt record.
 		 * @return Multi-String version of input, surrounded by quotes.
@@ -373,7 +377,12 @@
 			$current = '';
 			for ($i = 0; $i < strlen($input); $i++) {
 				$c = $input[$i];
-				if ($c == '"') { $current .= '\\'; }
+				// Escapes are added as a unit, so are never split across strings.
+				if ($c == '"' || $c == '\\') {
+					$c = '\\' . $c;
+				} else if (ord($c) < 32 || ord($c) == 127) {
+					$c = sprintf('\\%03d', ord($c));
+				}
 				$current .= $c;
 
 				if (strlen($current) >= 250) { $bits[] = $current; $current = ''; }
