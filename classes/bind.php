@@ -180,8 +180,16 @@
 					$this->debug('parseZoneFile', 'Origin is now: '.$origin);
 					if ($origin == '.') { $origin = ''; }
 					$lastComment = [];
+				} else if (strtolower($bits[0]) == '$include') {
+					throw new Exception('Includes are not supported: ' . $testline);
+				} else if (strtolower($bits[0]) == '$generate') {
+					// TODO: Support $GENERATE (at least partially).
+					throw new Exception('Unsupported Directive: ' . $testline);
+				} else if (strtolower($bits[0]) == '$date') {
+					throw new Exception('Unsupported Directive: ' . $testline);
 				} else {
-					// Zone stuff!
+					// Zone stuff! (Including names starting with '$', which are
+					// template records rather than directives.)
 					$pos = 0;
 					$thisttl = $zonettl;
 
