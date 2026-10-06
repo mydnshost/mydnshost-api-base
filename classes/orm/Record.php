@@ -647,8 +647,7 @@ class Record extends DBObject {
 	 * @return Fully qualified name.
 	 */
 	private static function qualifyName($name, $domain) {
-		if (endsWith($name, '.')) { return substr($name, 0, -1); }
-		if ($name === '') { return $domain; }
-		return ($domain === '') ? $name : $name . '.' . $domain;
+		$name = Bind::qualifyName(($name === '') ? '@' : $name, ($domain === '') ? '' : $domain . '.');
+		return substr($name, 0, -1);
 	}
 }

@@ -205,10 +205,8 @@
 					// Lines starting with whitespace inherit the previous owner name.
 					if ($name === '') {
 						$name = $lastName;
-					} else if ($name == '@') {
-						$name = $origin;
-					} else if ($name[strlen($name)-1] != '.') {
-						$name = $name.'.'.$origin;
+					} else {
+						$name = Bind::qualifyName($name, $origin);
 					}
 					$lastName = $name;
 
@@ -243,12 +241,8 @@
 							$info['Email'] = $bits[$pos++];
 
 							// Fully-Qualify the SOA.
-							if ($info['Nameserver'][strlen($info['Nameserver'])-1] != '.') {
-								$info['Nameserver'] .= '.' . $origin;
-							}
-							if ($info['Email'][strlen($info['Email'])-1] != '.') {
-								$info['Email'] .= '.' . $origin;
-							}
+							$info['Nameserver'] = Bind::qualifyName($info['Nameserver'], $origin);
+							$info['Email'] = Bind::qualifyName($info['Email'], $origin);
 
 							$soabits = array_slice($bits, $pos, 5);
 							if (count($soabits) < 5) {
@@ -277,6 +271,17 @@
 							for ($j = $pos; $j < count($bits); $j++) { $addr[] = $bits[$j]; }
 							$info['Address'] = trim(implode(' ', $addr), ';');
 							$info['TTL'] = $thisttl;
+
+							// Fully-Qualify any names in the record data.
+							if (in_array($type, ['CNAME', 'NS', 'MX', 'PTR'])) {
+								$info['Address'] = Bind::qualifyName($info['Address'], $origin);
+							} else if ($type == 'SRV' && preg_match('#^([0-9]+ [0-9]+) ([^\s]+)$#', $info['Address'], $m)) {
+								$info['Address'] = $m[1] . ' ' . Bind::qualifyName($m[2], $origin);
+							} else if ($type == 'SVCB' || $type == 'HTTPS') {
+								$parts = explode(' ', $info['Address'], 2);
+								$parts[0] = Bind::qualifyName($parts[0], $origin);
+								$info['Address'] = implode(' ', $parts);
+							}
 							break;
 					}
 
@@ -303,6 +308,20 @@
 					$this->debug('parseZoneFile', $line);
 				}
 			}
+		}
+
+		/**
+		 * Make a name from a zone file absolute.
+		 *
+		 * @param $name Name to qualify ('@' for the origin itself).
+		 * @param $origin Origin that relative names are relative to (with the
+		 *                trailing '.', or '' for the root).
+		 * @return Absolute name, with the trailing '.'.
+		 */
+		public static function qualifyName($name, $origin) {
+			if ($name === '' || str_ends_with($name, '.')) { return $name; }
+			if ($name == '@') { return ($origin === '') ? '.' : $origin; }
+			return $name . '.' . $origin;
 		}
 
 		/**
