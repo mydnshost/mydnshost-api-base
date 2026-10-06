@@ -162,11 +162,10 @@
 
 				// Records can span multiple lines using parentheses.
 				while ($depth > 0 && isset($file[$i + 1])) {
-					list($next, $comment, $change) = Bind::splitLine($file[++$i]);
+					list($next, $comment, $depth) = Bind::splitLine($file[++$i], $depth);
 					if ($comment !== '') { $lastComment[] = $comment; }
 					if (($next[0] ?? null) === '') { array_shift($next); }
 					$bits = array_merge($bits, $next);
-					$depth += $change;
 				}
 				if ($depth > 0) {
 					throw new Exception('Unbalanced parentheses: ' . $testline);
@@ -375,19 +374,19 @@
 		 * trailing bind-style comment (anything from an unquoted ';' onwards).
 		 * Quoted strings (eg TXT records) and characters escaped with a '\' are
 		 * kept intact within a token. Unquoted parentheses separate tokens, and
-		 * the change in parenthesis depth is returned so that records spanning
+		 * the resulting parenthesis depth is returned so that records spanning
 		 * multiple lines can be joined.
 		 *
 		 * @param $line Line to split
-		 * @return Array of [tokens, comment, change in parenthesis depth]. If
-		 *         the line starts with whitespace (an inherited owner name),
-		 *         the first token is ''.
+		 * @param $depth (Optional) Parenthesis depth at the start of the line.
+		 * @return Array of [tokens, comment, parenthesis depth at the end of
+		 *         the line]. If the line starts with whitespace (an inherited
+		 *         owner name), the first token is ''.
 		 */
-		public static function splitLine($line) {
+		public static function splitLine($line, $depth = 0) {
 			$tokens = [];
 			$current = '';
 			$comment = '';
-			$depth = 0;
 			$inQuote = false;
 			for ($i = 0; $i < strlen($line); $i++) {
 				$c = $line[$i];
@@ -403,6 +402,9 @@
 					break;
 				} else if (!$inQuote && ($c == '(' || $c == ')' || ctype_space($c))) {
 					if ($c == '(') { $depth++; } else if ($c == ')') { $depth--; }
+					if ($depth < 0) {
+						throw new Exception('Unbalanced parentheses: ' . trim($line));
+					}
 					if ($current !== '' || empty($tokens)) { $tokens[] = $current; }
 					$current = '';
 					continue;
