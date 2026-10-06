@@ -101,6 +101,16 @@
 			return $this->zoneFile;
 		}
 
+		/**
+		 * Set the contents of the zone file directly rather than reading it
+		 * from disk.
+		 *
+		 * @param $data Zone file contents as a string.
+		 */
+		function setZoneFileContents($data) {
+			$this->zoneFile = explode("\n", $data);
+		}
+
 		function ttlToInt($ttl) {
 			if (preg_match('#^([0-9]+)([smhdw])$#i', $ttl, $m)) {
 				$ttl = $m[1];

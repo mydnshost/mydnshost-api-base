@@ -6,16 +6,9 @@
 
 			$result = [];
 
-			$tmpname = tempnam('/tmp', 'ZONEIMPORT');
-			if ($tmpname === FALSE) {
-				throw new Exception('Internal Error.');
-			}
-
-			file_put_contents($tmpname, $data);
-
-			$bind = new Bind($domainName, '', $tmpname);
+			$bind = new Bind($domainName, '');
+			$bind->setZoneFileContents($data);
 			$bind->parseZoneFile();
-			unlink($tmpname);
 
 			$result['soa'] = $bind->getSOA();
 			$result['records'] = [];
