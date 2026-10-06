@@ -165,6 +165,9 @@
 					$bits = array_merge($bits, $next);
 					$depth += $change;
 				}
+				if ($depth > 0) {
+					throw new Exception('Unbalanced parentheses: ' . $testline);
+				}
 				if (empty($bits) || $bits == ['']) { continue; }
 
 				$pos = 0;
@@ -373,6 +376,10 @@
 				$current .= $c;
 			}
 			if ($current !== '') { $tokens[] = $current; }
+
+			if ($inQuote) {
+				throw new Exception('Unbalanced quotes: ' . trim($line));
+			}
 
 			return [$tokens, $comment, $depth];
 		}
