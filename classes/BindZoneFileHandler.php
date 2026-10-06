@@ -19,6 +19,8 @@
 				$result['records'][$rrtype] = $info;
 			}
 
+			$result['skipped'] = $bind->getSkipped();
+
 			return $result;
 		}
 

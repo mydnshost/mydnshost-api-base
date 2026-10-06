@@ -17,6 +17,8 @@
 		private $domainInfo = array();
 		/** This stores the file contents to save opening the file more than needed */
 		private $zoneFile = NULL;
+		/** Lines that were skipped when parsing the zone file, with the reason */
+		private $skipped = [];
 		/** Debugging enabled? */
 		private $debugging = FALSE;
 
@@ -147,6 +149,7 @@
 
 			$domainInfo = $this->domainInfo;
 			$lastComment = [];
+			$this->skipped = [];
 			for ($i = 0; $i < count($file); $i++) {
 				$testline = trim($file[$i]);
 				if (empty($testline)) { continue; }
@@ -204,12 +207,13 @@
 					$thisttl = $zonettl;
 
 					$name = $bits[0];
+					$class = 'IN';
 
 					for ($pos = 1; $pos < count($bits); $pos++) {
 						if (preg_match('#^[0-9]+[smhdw]?$#i', $bits[$pos])) {
 							$thisttl = $this->ttlToInt($bits[$pos]);
-						} else if (strtoupper($bits[$pos]) == 'IN') {
-							continue;
+						} else if (preg_match('#^(IN|CH|HS|CS|CLASS[0-9]+)$#i', $bits[$pos])) {
+							$class = strtoupper($bits[$pos]);
 						} else {
 							break;
 						}
@@ -227,6 +231,13 @@
 						$name = Bind::qualifyName($name, $origin);
 					}
 					$lastName = $name;
+
+					// We only support records in the IN class.
+					if ($class != 'IN' && $class != 'CLASS1') {
+						$this->skipped[] = $testline . ' (unsupported class)';
+						$lastComment = [];
+						continue;
+					}
 
 					// Now check to see if the name is within domain.com. if it is,
 					// make it relative. DNS names are case-insensitive.
@@ -602,6 +613,15 @@
 			}
 
 			return ksort($array);
+		}
+
+		/**
+		 * Get the lines that were skipped by the last parseZoneFile().
+		 *
+		 * @return Array of skipped lines, each with the reason.
+		 */
+		function getSkipped() {
+			return $this->skipped;
 		}
 
 		function getZoneHash() {
