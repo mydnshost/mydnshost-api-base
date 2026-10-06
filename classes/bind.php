@@ -154,21 +154,21 @@
 					$lastComment[] = ltrim($testline, '; ');
 					continue;
 				}
-				list($line, $comment, $depth) = Bind::splitLine($file[$i]);
+				list($bits, $comment, $depth) = Bind::splitLine($file[$i]);
 				if ($comment !== '') { $lastComment[] = $comment; }
 
 				// Records can span multiple lines using parentheses.
 				while ($depth > 0 && isset($file[$i + 1])) {
 					list($next, $comment, $change) = Bind::splitLine($file[++$i]);
 					if ($comment !== '') { $lastComment[] = $comment; }
-					if (trim($next) !== '') { $line .= ' ' . trim($next); }
+					if (($next[0] ?? null) === '') { array_shift($next); }
+					$bits = array_merge($bits, $next);
 					$depth += $change;
 				}
-				if (trim($line) == '') { continue; }
+				if (empty($bits) || $bits == ['']) { continue; }
 
 				$pos = 0;
 
-				$bits = preg_split('/\s+/', $line);
 				if (strtolower($bits[0]) == '$ttl') {
 					$zonettl = $this->ttlToInt($bits[++$pos]);
 					$haveZoneTTL = true;
@@ -199,7 +199,7 @@
 
 					$type = strtoupper(isset($bits[$pos]) ? $bits[$pos] : '');
 					$pos++;
-					$this->debug('parseZoneFile', 'Got Line of Type: '.$type.' ('.$line.')');
+					$this->debug('parseZoneFile', 'Got Line of Type: '.$type.' ('.implode(' ', $bits).')');
 
 					// We don't store origin changes, so add the origin if its not there
 					// Lines starting with whitespace inherit the previous owner name.
@@ -325,25 +325,28 @@
 		}
 
 		/**
-		 * Split a zone file line into its data and any trailing bind-style
-		 * comment (anything from an unquoted ';' onwards). Unquoted parentheses
-		 * are replaced with spaces, and the change in parenthesis depth is
-		 * returned so that records spanning multiple lines can be joined.
-		 * Anything inside double-quoted strings (eg TXT records) or escaped with
-		 * a '\' is left alone.
+		 * Split a zone file line into whitespace-separated tokens and any
+		 * trailing bind-style comment (anything from an unquoted ';' onwards).
+		 * Quoted strings (eg TXT records) and characters escaped with a '\' are
+		 * kept intact within a token. Unquoted parentheses separate tokens, and
+		 * the change in parenthesis depth is returned so that records spanning
+		 * multiple lines can be joined.
 		 *
 		 * @param $line Line to split
-		 * @return Array of [data, comment, change in parenthesis depth]
+		 * @return Array of [tokens, comment, change in parenthesis depth]. If
+		 *         the line starts with whitespace (an inherited owner name),
+		 *         the first token is ''.
 		 */
 		public static function splitLine($line) {
-			$data = '';
+			$tokens = [];
+			$current = '';
 			$comment = '';
 			$depth = 0;
 			$inQuote = false;
 			for ($i = 0; $i < strlen($line); $i++) {
 				$c = $line[$i];
 				if ($c == '\\' && $i + 1 < strlen($line)) {
-					$data .= $c . $line[++$i];
+					$current .= $c . $line[++$i];
 					continue;
 				}
 
@@ -352,15 +355,18 @@
 				} else if (!$inQuote && $c == ';') {
 					$comment = trim(ltrim(substr($line, $i), '; '));
 					break;
-				} else if (!$inQuote && ($c == '(' || $c == ')')) {
-					$depth += ($c == '(') ? 1 : -1;
-					$c = ' ';
+				} else if (!$inQuote && ($c == '(' || $c == ')' || ctype_space($c))) {
+					if ($c == '(') { $depth++; } else if ($c == ')') { $depth--; }
+					if ($current !== '' || empty($tokens)) { $tokens[] = $current; }
+					$current = '';
+					continue;
 				}
 
-				$data .= $c;
+				$current .= $c;
 			}
+			if ($current !== '') { $tokens[] = $current; }
 
-			return [rtrim($data), $comment, $depth];
+			return [$tokens, $comment, $depth];
 		}
 
 		/**
