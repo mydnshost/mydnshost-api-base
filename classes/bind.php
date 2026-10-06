@@ -105,12 +105,13 @@
 			if (preg_match('#^([0-9]+)([smhdw])$#i', $ttl, $m)) {
 				$ttl = $m[1];
 
+				$m[2] = strtolower($m[2]);
 				if ($m[2] == 'm') {
 					$ttl *= 60;
 				} else if ($m[2] == 'h') {
 					$ttl *= 3600;
 				} else if ($m[2] == 'd') {
-					$ttl = 86400;
+					$ttl *= 86400;
 				} else if ($m[2] == 'w') {
 					$ttl *= 604800;
 				}
@@ -125,25 +126,30 @@
 		function parseZoneFile() {
 			$file = $this->getZoneFileContents();
 			$zonettl = $this->ttlToInt('2d');
+			// If there is no $TTL before the SOA, the SOA minimum is used as the default TTL.
+			$haveZoneTTL = false;
 			$origin = $this->domain.'.';
 			$startname = $origin;
+			$lastName = $origin;
 
 			$domainInfo = $this->domainInfo;
 			$lastComment = [];
 			for ($i = 0; $i < count($file); $i++) {
 				$testline = trim($file[$i]);
-				if (empty($testline) || $testline == ')') { continue; }
+				if (empty($testline)) { continue; }
 				if ($testline[0] == ';') {
 					$lastComment[] = ltrim($testline, '; ');
 					continue;
 				}
-				$line = rtrim($file[$i]);
+				$line = rtrim(Bind::stripComment($file[$i]));
+				if (trim($line) == '' || trim($line) == ')') { continue; }
 
 				$pos = 0;
 
 				$bits = preg_split('/\s+/', $line);
 				if (strtolower($bits[0]) == '$ttl') {
 					$zonettl = $this->ttlToInt($bits[++$pos]);
+					$haveZoneTTL = true;
 					$this->debug('parseZoneFile', 'TTL is now: '.$zonettl);
 					if (!isset($domainInfo[' META ']['TTL'])) { $domainInfo[' META ']['TTL'] = $zonettl; }
 					$lastComment = [];
@@ -160,7 +166,7 @@
 					$name = $bits[0];
 
 					for ($pos = 1; $pos < count($bits); $pos++) {
-						if (is_numeric($bits[$pos])) {
+						if (preg_match('#^[0-9]+[smhdw]?$#i', $bits[$pos])) {
 							$thisttl = $this->ttlToInt($bits[$pos]);
 						} else if (strtoupper($bits[$pos]) == 'IN') {
 							continue;
@@ -174,11 +180,15 @@
 					$this->debug('parseZoneFile', 'Got Line of Type: '.$type.' ('.$line.')');
 
 					// We don't store origin changes, so add the origin if its not there
-					if ((empty($name) && $name != "0") || $name == '@') {
+					// Lines starting with whitespace inherit the previous owner name.
+					if ($name === '') {
+						$name = $lastName;
+					} else if ($name == '@') {
 						$name = $origin;
 					} else if ($name[strlen($name)-1] != '.') {
 						$name = $name.'.'.$origin;
 					}
+					$lastName = $name;
 
 					// Now check to see if the name ends with domain.com. if it does,
 					// remove it.
@@ -220,25 +230,40 @@
 								$info['Email'] .= '.' . $origin;
 							}
 
+							// The remaining values may be on this line, or start with a '('
+							// and continue onto following lines until we have all 5.
 							$soabits = array();
-							$multiLine = ($bits[$pos] == '(');
-							while (count($soabits) < 5) {
-								if ($multiLine) {
-									$line = trim($file[++$i]);
-									$bits = preg_split('/\s+/', $line);
-									foreach ($bits as $bit) {
-										if (trim($bit) == '' || $bit[0] == ';') { break; }
-										$soabits[] = $bit;
-									}
-								} else {
-									$soabits[] = $bits[$pos++];
+							$multiLine = false;
+							$addSOABits = function($bits) use (&$soabits, &$multiLine) {
+								foreach ($bits as $bit) {
+									if ($bit !== '' && $bit[0] == '(') { $multiLine = true; $bit = substr($bit, 1); }
+									if ($bit !== '' && substr($bit, -1) == ')') { $multiLine = false; $bit = substr($bit, 0, -1); }
+									if ($bit !== '') { $soabits[] = $bit; }
 								}
+							};
+
+							$addSOABits(array_slice($bits, $pos));
+							while ($multiLine && count($soabits) < 5) {
+								if (!isset($file[$i + 1])) { break; }
+								$line = trim(Bind::stripComment($file[++$i]));
+								if ($line == '') { continue; }
+								$addSOABits(preg_split('/\s+/', $line));
 							}
+
+							if (count($soabits) < 5) {
+								throw new Exception('Invalid SOA record. (Expected 5 values, found ' . count($soabits) . ')');
+							}
+
 							$info['Serial'] = $soabits[0];
 							$info['Refresh'] = $soabits[1];
 							$info['Retry'] = $soabits[2];
 							$info['Expire'] = $soabits[3];
-							$info['MinTTL'] = rtrim($soabits[4], ')');
+							$info['MinTTL'] = $soabits[4];
+
+							if (!$haveZoneTTL) {
+								$zonettl = $thisttl = $this->ttlToInt($info['MinTTL']);
+								$haveZoneTTL = true;
+							}
 							break;
 						case 'MX':
 						case 'SRV':
@@ -276,6 +301,26 @@
 					$this->debug('parseZoneFile', $line);
 				}
 			}
+		}
+
+		/**
+		 * Strip a trailing bind-style comment (anything from an unquoted ';'
+		 * onwards) from a zone file line. Semicolons inside double-quoted
+		 * strings (eg TXT records) are left alone, as are escaped quotes.
+		 *
+		 * @param $line Line to strip
+		 * @return Line with any comment removed
+		 */
+		public static function stripComment($line) {
+			$inQuote = false;
+			$last = '';
+			for ($i = 0; $i < strlen($line); $i++) {
+				$c = $line[$i];
+				if ($c == '"' && $last != '\\') { $inQuote = !$inQuote; }
+				else if ($c == ';' && !$inQuote) { return substr($line, 0, $i); }
+				$last = $c;
+			}
+			return $line;
 		}
 
 		/**
