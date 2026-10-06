@@ -33,8 +33,10 @@
 				$pdo = new PDO(sprintf('%s:host=%s;dbname=%s', $database['type'], $database['server'], $database['database']), $database['username'], $database['password'], $opts);
 				break;
 			} catch (PDOException $ex) {
-				if (stristr($ex->getMessage(), 'Connection timed out') !== FALSE) {
-					if ($wait-- > 0) { echo 'Waiting for DB...', "\n"; continue; }
+				// [2002] covers the server being unreachable (refused, timed out
+				// or not resolvable), eg while the database container restarts.
+				if (stristr($ex->getMessage(), '[2002]') !== FALSE) {
+					if ($wait-- > 0) { echo 'Waiting for DB...', "\n"; sleep(1); continue; }
 				}
 
 				throw $ex;
