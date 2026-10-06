@@ -199,22 +199,20 @@
 					}
 					$lastName = $name;
 
-					// Now check to see if the name ends with domain.com. if it does,
-					// remove it.
-					$len = strlen($this->domain)+1;
-					$end = substr($name, strlen($name) - $len);
+					// Now check to see if the name is within domain.com. if it is,
+					// make it relative. DNS names are case-insensitive.
+					$lowerName = strtolower($name);
+					$lowerDomain = strtolower($this->domain) . '.';
 
 					if ($type == 'SOA') {
 						// if ($name == $origin) {
 							$name = $this->domain . '.';
 						// }
 					} else {
-						if ($end == $this->domain.'.') {
-							if ($name != $end) {
-								$name = substr($name, 0,  strlen($name) - $len - 1);
-							} else {
-								$name = '';
-							}
+						if ($lowerName == $lowerDomain) {
+							$name = '';
+						} else if (str_ends_with($lowerName, '.' . $lowerDomain)) {
+							$name = substr($name, 0, -(strlen($lowerDomain) + 1));
 						}
 					}
 
