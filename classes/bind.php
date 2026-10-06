@@ -60,7 +60,7 @@
 		 * @param $file (optional) File to load domain info from
 		 */
 		function __construct($domain, $zonedirectory, $file = '') {
-			$domain = do_idn_to_ascii($domain);
+			$domain = Bind::idnToAscii($domain);
 			$this->domain = $domain;
 			$this->zonedirectory = $zonedirectory;
 			if ($file == '' || !file_exists($file) || !is_file($file) || !is_readable($file)) {
@@ -341,6 +341,22 @@
 		}
 
 		/**
+		 * Convert a name to its ASCII (punycode) form.
+		 *
+		 * '' and '.' are returned unchanged, as is any name that can not be
+		 * converted (eg an over-long or empty label) so that it fails
+		 * validation rather than becoming false.
+		 *
+		 * @param $name Name to convert.
+		 * @return ASCII form of the name.
+		 */
+		private static function idnToAscii($name) {
+			if ($name == '.' || empty($name)) { return $name; }
+			$result = idn_to_ascii($name, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+			return ($result === false) ? $name : $result;
+		}
+
+		/**
 		 * Make a name from a zone file absolute.
 		 *
 		 * @param $name Name to qualify ('@' for the origin itself).
@@ -514,8 +530,8 @@
 		 * @param $soa The SOA record for this domain.
 		 */
 		function setSOA($soa) {
-			$soa['Nameserver'] = do_idn_to_ascii(substr($soa['Nameserver'], -1) == '.' ? substr($soa['Nameserver'], 0, -1) : $soa['Nameserver']) . '.';
-			$soa['Email'] = do_idn_to_ascii(substr($soa['Email'], -1) == '.' ? substr($soa['Email'], 0, -1) : $soa['Email']) . '.';
+			$soa['Nameserver'] = Bind::idnToAscii(substr($soa['Nameserver'], -1) == '.' ? substr($soa['Nameserver'], 0, -1) : $soa['Nameserver']) . '.';
+			$soa['Email'] = Bind::idnToAscii(substr($soa['Email'], -1) == '.' ? substr($soa['Email'], 0, -1) : $soa['Email']) . '.';
 			$this->domainInfo['SOA'][$this->domain.'.'][0] = $soa;
 		}
 
@@ -549,7 +565,7 @@
 		 * @param $comment (optional) Comment to put above this record
 		 */
 		function setRecord($name, $type, $data, $ttl = '', $priority = '', $comment = []) {
-			$name = ((empty($name) && $name !== '0' && $name !== 0) || $name === '@') ? '' : do_idn_to_ascii($name);
+			$name = ((empty($name) && $name !== '0' && $name !== 0) || $name === '@') ? '' : Bind::idnToAscii($name);
 			$domainInfo = $this->domainInfo;
 			if ($ttl == '') { $ttl = $domainInfo[' META ']['TTL']; }
 
@@ -560,7 +576,7 @@
 			}
 
 			if ($type == 'MX' || $type == 'CNAME' || $type == 'PTR' || $type == 'NS') {
-				$info['Address'] = do_idn_to_ascii($info['Address']);
+				$info['Address'] = Bind::idnToAscii($info['Address']);
 			}
 
 			if (!empty($comment) && !is_array($comment)) { $comment = explode("\n", $comment); }
