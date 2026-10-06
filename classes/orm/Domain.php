@@ -525,9 +525,14 @@ class Domain extends DBObject {
 
 			$hasNS = $hasNS || ($record->getType() == "NS" && $record->getName() == $recordDomain->getDomain());
 
-			if (!$raw && $record->getType() == 'RRCLONE') {
-				$cloneRecords[] = $record;
-				continue;
+			if ($record->getType() == 'RRCLONE') {
+				if (!$raw) {
+					$cloneRecords[] = $record;
+					continue;
+				}
+
+				// RRCLONE content is exported exactly as stored.
+				$content = $record->getContent();
 			}
 
 			$records->addRecord($name, $record->getType(), $content, $record->getTTL(), $record->getPriority(), $record->getComment());

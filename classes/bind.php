@@ -283,7 +283,9 @@
 					if (!isset($domainInfo[' META ']['TTL'])) { $domainInfo[' META ']['TTL'] = $thisttl; }
 
 					// If a TXT record is given, parse it to a single string rather than multiple.
-					if ($type == 'TXT') { $info['Address'] = Bind::parseTXTRecord($info['Address']); }
+					// RRCLONE records are quoted the same way, so that the "(<types>)" prefix
+					// isn't treated as a multi-line group.
+					if ($type == 'TXT' || $type == 'RRCLONE') { $info['Address'] = Bind::parseTXTRecord($info['Address']); }
 
 					$info['Comment'] = $lastComment;
 					$lastComment = [];
@@ -633,7 +635,7 @@
 								}
 							}
 						}
-						if ($type == 'TXT') { $address = Bind::stringToTXTRecord($address); }
+						if ($type == 'TXT' || $type == 'RRCLONE') { $address = Bind::stringToTXTRecord($address); }
 						$lines[] = sprintf('%-30s %7s    IN %7s   %-6s %s', $bit, $ttl, $type, $priority, $address);
 					}
 				}
