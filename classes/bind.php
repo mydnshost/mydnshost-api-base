@@ -141,8 +141,17 @@
 					$lastComment[] = ltrim($testline, '; ');
 					continue;
 				}
-				$line = rtrim(Bind::stripComment($file[$i]));
-				if (trim($line) == '' || trim($line) == ')') { continue; }
+				list($line, $comment, $depth) = Bind::splitLine($file[$i]);
+				if ($comment !== '') { $lastComment[] = $comment; }
+
+				// Records can span multiple lines using parentheses.
+				while ($depth > 0 && isset($file[$i + 1])) {
+					list($next, $comment, $change) = Bind::splitLine($file[++$i]);
+					if ($comment !== '') { $lastComment[] = $comment; }
+					if (trim($next) !== '') { $line .= ' ' . trim($next); }
+					$depth += $change;
+				}
+				if (trim($line) == '') { continue; }
 
 				$pos = 0;
 
@@ -230,26 +239,7 @@
 								$info['Email'] .= '.' . $origin;
 							}
 
-							// The remaining values may be on this line, or start with a '('
-							// and continue onto following lines until we have all 5.
-							$soabits = array();
-							$multiLine = false;
-							$addSOABits = function($bits) use (&$soabits, &$multiLine) {
-								foreach ($bits as $bit) {
-									if ($bit !== '' && $bit[0] == '(') { $multiLine = true; $bit = substr($bit, 1); }
-									if ($bit !== '' && substr($bit, -1) == ')') { $multiLine = false; $bit = substr($bit, 0, -1); }
-									if ($bit !== '') { $soabits[] = $bit; }
-								}
-							};
-
-							$addSOABits(array_slice($bits, $pos));
-							while ($multiLine && count($soabits) < 5) {
-								if (!isset($file[$i + 1])) { break; }
-								$line = trim(Bind::stripComment($file[++$i]));
-								if ($line == '') { continue; }
-								$addSOABits(preg_split('/\s+/', $line));
-							}
-
+							$soabits = array_slice($bits, $pos, 5);
 							if (count($soabits) < 5) {
 								throw new Exception('Invalid SOA record. (Expected 5 values, found ' . count($soabits) . ')');
 							}
@@ -304,23 +294,41 @@
 		}
 
 		/**
-		 * Strip a trailing bind-style comment (anything from an unquoted ';'
-		 * onwards) from a zone file line. Semicolons inside double-quoted
-		 * strings (eg TXT records) are left alone, as are escaped quotes.
+		 * Split a zone file line into its data and any trailing bind-style
+		 * comment (anything from an unquoted ';' onwards). Unquoted parentheses
+		 * are replaced with spaces, and the change in parenthesis depth is
+		 * returned so that records spanning multiple lines can be joined.
+		 * Anything inside double-quoted strings (eg TXT records) is left alone.
 		 *
-		 * @param $line Line to strip
-		 * @return Line with any comment removed
+		 * @param $line Line to split
+		 * @return Array of [data, comment, change in parenthesis depth]
 		 */
-		public static function stripComment($line) {
+		public static function splitLine($line) {
+			$data = '';
+			$comment = '';
+			$depth = 0;
 			$inQuote = false;
-			$last = '';
 			for ($i = 0; $i < strlen($line); $i++) {
 				$c = $line[$i];
-				if ($c == '"' && $last != '\\') { $inQuote = !$inQuote; }
-				else if ($c == ';' && !$inQuote) { return substr($line, 0, $i); }
-				$last = $c;
+				if ($inQuote && $c == '\\' && $i + 1 < strlen($line)) {
+					$data .= $c . $line[++$i];
+					continue;
+				}
+
+				if ($c == '"') {
+					$inQuote = !$inQuote;
+				} else if (!$inQuote && $c == ';') {
+					$comment = trim(ltrim(substr($line, $i), '; '));
+					break;
+				} else if (!$inQuote && ($c == '(' || $c == ')')) {
+					$depth += ($c == '(') ? 1 : -1;
+					$c = ' ';
+				}
+
+				$data .= $c;
 			}
-			return $line;
+
+			return [rtrim($data), $comment, $depth];
 		}
 
 		/**
