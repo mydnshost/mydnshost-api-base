@@ -173,15 +173,22 @@
 				$pos = 0;
 
 				if (strtolower($bits[0]) == '$ttl') {
-					$zonettl = $this->ttlToInt($bits[++$pos]);
-					$haveZoneTTL = true;
-					$this->debug('parseZoneFile', 'TTL is now: '.$zonettl);
-					if (!isset($domainInfo[' META ']['TTL'])) { $domainInfo[' META ']['TTL'] = $zonettl; }
+					// A $TTL without a value is ignored, keeping the previous TTL.
+					if (isset($bits[1])) {
+						$zonettl = $this->ttlToInt($bits[1]);
+						$haveZoneTTL = true;
+						$this->debug('parseZoneFile', 'TTL is now: '.$zonettl);
+						if (!isset($domainInfo[' META ']['TTL'])) { $domainInfo[' META ']['TTL'] = $zonettl; }
+					}
 					$lastComment = [];
 				} else if (strtolower($bits[0]) == '$origin') {
-					$origin = $bits[++$pos];
-					$this->debug('parseZoneFile', 'Origin is now: '.$origin);
-					if ($origin == '.') { $origin = ''; }
+					// A relative $ORIGIN is relative to the current origin. A
+					// $ORIGIN without a value is ignored.
+					if (isset($bits[1])) {
+						$origin = Bind::qualifyName($bits[1], $origin);
+						if ($origin == '.') { $origin = ''; }
+						$this->debug('parseZoneFile', 'Origin is now: '.$origin);
+					}
 					$lastComment = [];
 				} else if (strtolower($bits[0]) == '$include') {
 					throw new Exception('Includes are not supported: ' . $testline);
