@@ -580,12 +580,18 @@
 		return date('[Y-m-d H:i:s O]');
 	}
 
+	// If the conversion fails (eg an over-long or empty label), these return the
+	// input unchanged so that it fails validation, rather than returning false.
 	function do_idn_to_ascii($domain) {
-		return ($domain == '.' || empty($domain)) ? $domain : idn_to_ascii($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+		if ($domain == '.' || empty($domain)) { return $domain; }
+		$result = idn_to_ascii($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+		return ($result === false) ? $domain : $result;
 	}
 
 	function do_idn_to_utf8($domain) {
-		return ($domain == '.' || empty($domain)) ? $domain : idn_to_utf8($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+		if ($domain == '.' || empty($domain)) { return $domain; }
+		$result = idn_to_utf8($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+		return ($result === false) ? $domain : $result;
 	}
 
 	function findCommandPath($commands = []) {
