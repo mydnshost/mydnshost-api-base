@@ -234,9 +234,10 @@
 					$lowerDomain = strtolower($this->domain) . '.';
 
 					if ($type == 'SOA') {
-						// if ($name == $origin) {
-							$name = $this->domain . '.';
-						// }
+						if ($this->domain !== '' && $lowerName != $lowerDomain) {
+							throw new Exception('SOA record is not at the zone apex: ' . $testline);
+						}
+						$name = $this->domain . '.';
 					} else {
 						if ($lowerName == $lowerDomain) {
 							$name = '';
