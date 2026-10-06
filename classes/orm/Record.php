@@ -564,80 +564,91 @@ class Record extends DBObject {
 		return sprintf('%-30s %7s    IN %7s   %-6s %s', $this->getNameRaw() . '.', $this->getTTL(), $this->getType(), $this->getPriority(), $content);
 	}
 
+	/**
+	 * Parse a record from a bind zone file line.
+	 *
+	 * @param $str Zone file line to parse.
+	 * @param $domain (Optional) Domain that relative names are relative to.
+	 * @return $this
+	 */
 	public function parseString($str, $domain = '') {
-		// TODO: This can not handle comments.
-		$bits = preg_split('/\s+/', $str);
+		$bind = new Bind($domain, '');
+		$bind->setZoneFileContents($str);
+		$bind->parseZoneFile();
 
-		$name = array_shift($bits);
+		foreach ($bind->getDomainInfo() as $type => $entries) {
+			if ($type == ' META ') { continue; }
 
-		if ((empty($name) && $name !== "0") || $name == '@') {
-			$name = $domain . '.';
-		} else if ($name[strlen($name) - 1] != '.') {
-			$name = $name . '.' . $domain . '.';
-		}
-		$len = strlen($domain) + 1;
-		$end = substr($name, strlen($name) - $len);
-
-		if ($end == $domain . '.') {
-			if ($name != $end) {
-				if ($domain == '') {
-					$name = substr($name, 0,  strlen($name) - $len);
-				} else {
-					$name = substr($name, 0,  strlen($name) - $len - 1);
+			foreach ($entries as $name => $records) {
+				foreach ($records as $info) {
+					return $this->setFromBindInfo($domain, $name, $type, $info);
 				}
-			} else {
-				$name = '';
 			}
 		}
 
-		if ($domain != '') {
-			if ($name != '') { $name .= '.'; }
-			$name =  $domain;
-		}
+		throw new Exception('Unable to parse record: ' . $str);
+	}
 
-		$this->setName($name);
-
-		$next = array_shift($bits);
-		if (is_numeric($next)) {
-			$this->setTTL($next);
-			$next = array_shift($bits);
-		}
-
-		if (in_array(strtoupper($next), ['IN', 'CS', 'CH', 'HS'])) {
-			if ($next != 'IN') { throw new Exception('Unsupported Class: ' . $next); }
-			$next = array_shift($bits);
-		}
-
-		$type = $next;
+	/**
+	 * Populate this record from a record as returned by the Bind zone file
+	 * parser. This converts from zone file form (names relative to the domain,
+	 * absolute names with a trailing '.') to how we store records (fully
+	 * qualified, without the trailing '.').
+	 *
+	 * @param $domain Domain the record was parsed relative to.
+	 * @param $name Record name from the parser.
+	 * @param $type Record type.
+	 * @param $info Record info from the parser.
+	 * @return $this
+	 */
+	public function setFromBindInfo($domain, $name, $type, $info) {
+		$this->setName(Record::qualifyName($name, $domain));
 		$this->setType($type);
+		$this->setTTL($info['TTL']);
 
-		if ($this->getType() == "MX" || $this->getType() == "SRV") {
-			$this->setPriority(array_shift($bits));
-		}
+		if ($type == 'SOA') {
+			$content = implode(' ', [$info['Nameserver'], $info['Email'], $info['Serial'], $info['Refresh'], $info['Retry'], $info['Expire'], $info['MinTTL']]);
+		} else {
+			$content = $info['Address'];
 
-		$content = implode(' ', $bits);
-
-		if (in_array($type, ['CNAME', 'NS', 'MX', 'PTR', 'RRCLONE'])) {
-			if (endsWith($content, '.')) {
-				$content = rtrim($content, '.');
-			} else {
-				if (!empty($content)) { $content .= '.'; }
-				$content .= $domain;
-			}
-		} else if ($type == 'SRV' && preg_match('#^([0-9]+ [0-9]+) ([^\s]+)$#', $content, $m)) {
-			if ($m[2] != '.') {
-				if (endsWith($content, '.')) {
-					$content = rtrim($content, '.');
-				} else {
-					if (!empty($content)) { $content .= '.'; }
-					$content .= $domain;
+			if (in_array($type, ['CNAME', 'NS', 'MX', 'PTR'])) {
+				$content = Record::qualifyName($content, $domain);
+			} else if ($type == 'SRV' && preg_match('#^([0-9]+ [0-9]+) ([^\s]+)$#', $content, $m)) {
+				if ($m[2] != '.') {
+					$content = $m[1] . ' ' . Record::qualifyName($m[2], $domain);
 				}
+			} else if ($type == 'SVCB' || $type == 'HTTPS') {
+				$bits = explode(' ', $content, 2);
+				if ($bits[0] != '.') {
+					$bits[0] = Record::qualifyName($bits[0], $domain);
+				}
+				$content = implode(' ', $bits);
 			}
-		} else if ($type == 'TXT' && preg_match('#^"(.*)"$#', $content, $m)) {
-			$content = $m[1];
 		}
 		$this->setContent($content);
 
+		if (isset($info['Priority'])) {
+			$this->setPriority($info['Priority']);
+		}
+
+		if (!empty($info['Comment'])) {
+			$this->setComment(implode("\n", $info['Comment']));
+		}
+
 		return $this;
+	}
+
+	/**
+	 * Convert a name from zone file form into a fully qualified name without
+	 * the trailing '.'.
+	 *
+	 * @param $name Name to qualify ('' for the domain itself).
+	 * @param $domain Domain that relative names are relative to.
+	 * @return Fully qualified name.
+	 */
+	private static function qualifyName($name, $domain) {
+		if (endsWith($name, '.')) { return substr($name, 0, -1); }
+		if ($name === '') { return $domain; }
+		return ($domain === '') ? $name : $name . '.' . $domain;
 	}
 }

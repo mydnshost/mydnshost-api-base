@@ -265,6 +265,7 @@
 								$zonettl = $thisttl = $this->ttlToInt($info['MinTTL']);
 								$haveZoneTTL = true;
 							}
+							$info['TTL'] = $thisttl;
 							break;
 						default:
 							if (in_array($type, Bind::PRIORITY_RRS)) {
