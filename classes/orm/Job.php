@@ -116,6 +116,27 @@ class Job extends DBObject {
 	}
 
 	/**
+	 * Atomically move this job from 'created' to 'started'.
+	 *
+	 * Only one caller can succeed, so duplicate messages for the same job
+	 * (redelivery, republishing) don't run it twice.
+	 *
+	 * @return TRUE if we claimed the job, FALSE if it was not in 'created'.
+	 */
+	public function claim() {
+		$now = time();
+
+		$query = 'UPDATE `jobs` SET `state` = \'started\', `started` = :started WHERE `id` = :id AND `state` = \'created\'';
+		$statement = $this->getDB()->getPDO()->prepare($query);
+		if (!$statement->execute([':started' => $now, ':id' => $this->getID()]) || $statement->rowCount() != 1) {
+			return FALSE;
+		}
+
+		$this->setState('started')->setStarted($now)->setChanged(false);
+		return TRUE;
+	}
+
+	/**
 	 * Add a job that must complete before we can start.
 	 */
 	public function addDependency($parentid) {

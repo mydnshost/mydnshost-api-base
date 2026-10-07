@@ -695,6 +695,15 @@ CREATE TABLE `audit_log` (
 MYSQLQUERY
 );
 
+			// ------------------------------------------------------------------------
+			// Expired jobs, and index for finding stuck jobs.
+			// ------------------------------------------------------------------------
+			$dataChanges[51] = new DBChange(<<<MYSQLQUERY
+ALTER TABLE `jobs` MODIFY `state` ENUM('created', 'blocked', 'started', 'finished', 'error', 'cancelled', 'expired') NOT NULL DEFAULT 'created';
+ALTER TABLE `jobs` ADD INDEX `jobstatecreated` (`state` ASC, `created` ASC);
+MYSQLQUERY
+);
+
 			return $dataChanges;
 		}
 	}
