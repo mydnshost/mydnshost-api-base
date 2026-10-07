@@ -79,9 +79,8 @@
 	$config['rabbitmq']['user'] = getEnvOrDefault('RABBITMQ_USER', 'guest');
 	$config['rabbitmq']['pass'] = getEnvOrDefault('RABBITMQ_PASS', 'guest');
 
-	// Config for MongoDB
-	$config['mongodb']['server'] = getEnvOrDefault('MONGO_HOST', '127.0.0.1');
-	$config['mongodb']['database'] = getEnvOrDefault('MONGO_DB', 'mydnshost');
+	// Config for VictoriaLogs (container logs)
+	$config['victorialogs']['url'] = getEnvOrDefault('VICTORIALOGS_URL', 'http://127.0.0.1:9428');
 
 	function getJobWorkerConfig($w) {
 		$result = [];

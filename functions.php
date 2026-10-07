@@ -57,8 +57,8 @@
 	// RabbitMQ
 	RabbitMQ::get()->setRabbitMQ($config['rabbitmq']);
 
-	// Mongo
-	Mongo::get()->setMongoConfig($config['mongodb']);
+	// VictoriaLogs
+	VictoriaLogs::get()->setConfig($config['victorialogs']);
 
 	// Event Queue.
 	EventQueue::get();
@@ -335,28 +335,13 @@
 		$source = explode(':', $config['domainlogs']['source'], 2);
 
 		if ($source[0] == 'docker' && isset($source[1])) {
-
-			$regex = '(\'| |\()' . preg_quote($domain->getDomain());
-
-			$search = ['docker.hostname' => $source[1],
-			           '$and' => [[
-			               '$text' => ['$search' => $domain->getDomain()],
-			               'message' => ['$regex' => $regex],
-			            ]],
-			          ];
-			$options = ['projection' => ['_id' => 0], 'sort' => ['timestamp' => -1], 'limit' => 100];
-
-			Mongo::get()->connect();
-			$logs = Mongo::get()->getCollection('dockerlogs')->find($search, $options)->toArray();
-			$logs = array_reverse($logs);
+			$regex = '(?i)(\'| |\()' . preg_quote($domain->getDomain());
+			$query = '{service=' . VictoriaLogs::quote($source[1]) . '} ~' . VictoriaLogs::quote($regex) . ' | sort by (_time) desc | limit 100';
+			$logs = array_reverse(VictoriaLogs::get()->query($query));
 
 			$result = [];
 			foreach ($logs as $log) {
-				$ts = $log['timestamp'];
-				if ($ts instanceof \MongoDB\BSON\UTCDateTime) {
-					$ts = $ts->toDateTime()->format('r');
-				}
-				$result[] = ['timestamp' => $ts, 'message' => $log['message']];
+				$result[] = ['timestamp' => VictoriaLogs::formatTime($log['_time']), 'message' => $log['_msg']];
 			}
 
 			return $result;
