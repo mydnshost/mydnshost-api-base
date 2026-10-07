@@ -2,10 +2,16 @@
 
 	use PhpAmqpLib\Connection\AMQPStreamConnection;
 	use PhpAmqpLib\Message\AMQPMessage;
+	use PhpAmqpLib\Wire\AMQPTable;
 
 	class EventQueue {
 		// Instance of EventQueue.
 		private static $instance = null;
+
+		// Limits on subscriber queues, so a long-dead subscriber can't grow
+		// one without bound or replay ancient events when it comes back.
+		const QUEUE_MAX_AGE = 86400;
+		const QUEUE_MAX_LENGTH = 100000;
 
 		private $subscribers = [];
 		private $actor = null;
@@ -48,20 +54,31 @@
 		 * @param $args Event Arguments
 		 */
 		public function publish($event, $args) {
-			try {
-				RabbitMQ::get()->getChannel()->exchange_declare('events', 'topic', false, false, false);
+			$event = strtolower($event);
 
-				$event = strtolower($event);
+			try {
 				$payload = ['event' => $event, 'args' => $args];
 				if ($this->actor !== null) {
 					$payload['actor'] = $this->actor;
 				}
-				$msg = new AMQPMessage(json_encode($payload));
-				RabbitMQ::get()->getChannel()->basic_publish($msg, 'events', 'event.' . $event);
+				$msg = new AMQPMessage(json_encode($payload), ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]);
+				RabbitMQ::get()->publish($msg, 'events', 'event.' . $event, function ($channel) {
+					$this->declareExchange($channel);
+				});
 				return true;
 			} catch (Exception $ex) {
+				error_log('Failed to publish event ' . $event . ': ' . $ex->getMessage());
 				return false;
 			}
+		}
+
+		/**
+		 * Declare the events exchange.
+		 *
+		 * @param $channel Channel to use
+		 */
+		private function declareExchange($channel) {
+			$channel->exchange_declare('events', 'topic', false, true, false);
 		}
 
 		/**
@@ -99,14 +116,25 @@
 		/**
 		 * Allow consuming events from the bus.
 		 *
+		 * Each subscribing service has its own named durable queue, so events
+		 * queue up while it isn't running. Multiple instances of one service
+		 * share the queue. Events are acked once handled, so are redelivered
+		 * if we die while handling one.
+		 *
+		 * @param $queueName Name of the queue for this service (eg
+		 *                   'events.dispatcher').
 		 * @param $function If this is given, this will be called instead of
 		 *                  our own handling.
+		 * @param $bindingKey Events to subscribe to.
 		 */
-		public function consumeEvents($function = NULL, $bindingKey = '#') {
-			RabbitMQ::get()->getChannel()->exchange_declare('events', 'topic', false, false, false);
-			RabbitMQ::get()->getChannel()->queue_bind(RabbitMQ::get()->getQueue(), 'events', $bindingKey);
+		public function consumeEvents($queueName, $function = NULL, $bindingKey = '#') {
+			$channel = RabbitMQ::get()->getChannel();
 
-			RabbitMQ::get()->getChannel()->basic_consume(RabbitMQ::get()->getQueue(), '', false, true, false, false, function($msg) use ($function) {
+			$this->declareExchange($channel);
+			$channel->queue_declare($queueName, false, true, false, false, false, new AMQPTable(['x-message-ttl' => self::QUEUE_MAX_AGE * 1000, 'x-max-length' => self::QUEUE_MAX_LENGTH]));
+			$channel->queue_bind($queueName, 'events', $bindingKey);
+
+			RabbitMQ::get()->consumeQueue($queueName, function($msg) use ($function) {
 				$event = @json_decode($msg->body, true);
 				if (json_last_error() != JSON_ERROR_NONE) { $event = $msg->body; }
 
@@ -115,6 +143,8 @@
 				} else {
 					$this->handleSubscribers($event);
 				}
-			});
+
+				$msg->ack();
+			}, 10);
 		}
 	}

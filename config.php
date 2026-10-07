@@ -78,6 +78,9 @@
 	$config['rabbitmq']['port'] = getEnvOrDefault('RABBITMQ_PORT', 5672);
 	$config['rabbitmq']['user'] = getEnvOrDefault('RABBITMQ_USER', 'guest');
 	$config['rabbitmq']['pass'] = getEnvOrDefault('RABBITMQ_PASS', 'guest');
+	// Heartbeat in seconds. Must be longer than any job runs for on workers,
+	// as heartbeats are only sent between jobs.
+	$config['rabbitmq']['heartbeat'] = getEnvOrDefault('RABBITMQ_HEARTBEAT', 30);
 
 	// Config for VictoriaLogs (container logs)
 	$config['victorialogs']['url'] = getEnvOrDefault('VICTORIALOGS_URL', 'http://127.0.0.1:9428');
