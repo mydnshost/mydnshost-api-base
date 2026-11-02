@@ -498,7 +498,8 @@ class Domain extends DBObject {
 	 *              as-is rather than expanding them to real records?
 	 * @return Array of ['soa' => <soa array>,
 	 *                   'records' => <RecordsInfo|Records Array>,
-	 *                   'hasNS' => <boolean>];
+	 *                   'hasNS' => <boolean>,
+	 *                   'rrcloneHashes' => <array of RRCLONE record id => hash of expanded records>];
 	 */
 	public function getRecordsInfo($expandRecordsInfo = false, $raw = false) {
 		$recordDomain = ($this->getAliasOf() != null) ? $this->getAliasDomain(true) : $this;
@@ -516,6 +517,7 @@ class Domain extends DBObject {
 		$cloneRecords = [];
 		$hasNS = false;
 		$warnings = [];
+		$rrcloneHashes = [];
 
 		foreach ($recordDomain->getRecords() as $record) {
 			if ($record->isDisabled()) { continue; }
@@ -645,12 +647,9 @@ class Domain extends DBObject {
 					}
 				}
 
-				// Compute and store hash of expanded RRCLONE records for cascade optimization
+				// Compute hash of expanded RRCLONE records for cascade optimization
 				sort($hashParts);
-				$newHash = empty($hashParts) ? null : hash('sha256', implode("\n", $hashParts));
-				if ($record->getRemoteValueHash() !== $newHash) {
-					$record->setRemoteValueHash($newHash)->save();
-				}
+				$rrcloneHashes[$record->getID()] = empty($hashParts) ? null : hash('sha256', implode("\n", $hashParts));
 
 				if ($validRecordCount == 0) {
 					$warnings[] = $record->getName() . ' inherits no valid target records.';
@@ -719,9 +718,26 @@ class Domain extends DBObject {
 
 		if ($expandRecordsInfo) { $records = $records->get(); }
 
-		$res = ['soa' => $bindSOA, 'hasNS' => $hasNS, 'records' => $records];
+		$res = ['soa' => $bindSOA, 'hasNS' => $hasNS, 'records' => $records, 'rrcloneHashes' => $rrcloneHashes];
 		if (!empty($warnings)) { $res['warnings'] = $warnings; }
 		return $res;
+	}
+
+	/**
+	 * Remember the RRCLONE expansions that this domain's zone file was built from.
+	 *
+	 * Aliases have their own zone file but share their parent's records, so
+	 * only records owned by this domain are updated.
+	 *
+	 * @param $hashes Array of RRCLONE record id => hash, from getRecordsInfo()
+	 */
+	public function saveRRCloneHashes($hashes) {
+		foreach ($hashes as $id => $hash) {
+			$record = $this->getRecord($id);
+			if ($record !== FALSE && $record->getRemoteValueHash() !== $hash) {
+				$record->setRemoteValueHash($hash)->save();
+			}
+		}
 	}
 
 	public function checkZoneValidity() {
